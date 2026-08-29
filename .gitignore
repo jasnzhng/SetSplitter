@@ -17,3 +17,13 @@ xcuserdata/
 # Phase 0 spike scratch output (regenerate with split-spike)
 Spikes/**/spike-out/
 spike-out/
+
+# Markdown — ignore ad-hoc notes/scratch .md files by default.
+# The canonical docs are force-tracked below; already-tracked files are
+# unaffected by this rule regardless.
+*.md
+!/CLAUDE.md
+!/implementation.md
+!/progress.md
+!/README.md
+!/Spikes/SplitSpike/README.md
