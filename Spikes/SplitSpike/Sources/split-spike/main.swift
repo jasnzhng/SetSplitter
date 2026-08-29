@@ -1,7 +1,7 @@
 import AVFoundation
 import Foundation
 
-// split-spike <input.(mp3|m4a|wav)> "0:00,2:36,4:44" [--codec aac|alac] [--bitrate 256] [--out DIR] [--no-verify]
+// split-spike <input.(mp3|m4a|wav)> "0:00,2:36,4:44" [--codec aac|alac] [--bitrate 256] [--out DIR] [--album NAME] [--no-verify]
 //
 // Phase 0 feasibility spike (implementation.md §12, §13). Streams a decode of `input`, splits it at
 // the given timestamps into per-track .m4a files with full iTunes metadata + artwork, then verifies
@@ -31,7 +31,7 @@ let inputURL = URL(fileURLWithPath: (argv[1] as NSString).expandingTildeInPath).
 guard FileManager.default.fileExists(atPath: inputURL.path) else { fail("input not found: \(inputURL.path)") }
 
 let boundarySeconds = argv[2].split(separator: ",").map { s -> Double in
-    guard let v = parseTimestamp(s.trimmingCharacters(in: .whitespaces)) else { fail("bad timestamp: \(s)") }
+    guard let v = parseTimestamp(String(s).trimmingCharacters(in: .whitespaces)) else { fail("bad timestamp: \(s)") }
     return v
 }
 
@@ -39,6 +39,7 @@ var codec: SpikeCodec = .aac
 var bitrate = 256
 var outDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("spike-out")
 var verify = true
+var albumName = "SetSplitter Phase 0 Spike"
 var i = 3
 while i < argv.count {
     switch argv[i] {
@@ -53,13 +54,16 @@ while i < argv.count {
         outDir = URL(fileURLWithPath: (argv[i + 1] as NSString).expandingTildeInPath); i += 2
     case "--no-verify":
         verify = false; i += 1
+    case "--album":
+        guard i + 1 < argv.count else { fail("--album NAME") }
+        albumName = argv[i + 1]; i += 2
     default:
         fail("unknown arg: \(argv[i])")
     }
 }
 
 let album = SpikeAlbumMetadata(
-    album: "SetSplitter Phase 0 Spike",
+    album: albumName,
     albumArtist: "Various Artists",
     year: 2026,
     genre: "Electronic",

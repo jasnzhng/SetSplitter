@@ -9,7 +9,7 @@ Phase 3 ports `SampleBufferSplitting.swift`, `TrackWriter.swift`,
 
 ```
 swift build -c release
-.build/release/split-spike <input.mp3> "0:00,0:45,1:30,2:15" [--codec aac|alac] [--bitrate 256] [--out DIR] [--no-verify]
+.build/release/split-spike <input.mp3> "0:00,0:45,1:30,2:15" [--codec aac|alac] [--bitrate 256] [--out DIR] [--album NAME] [--no-verify]
 ```
 
 - Streams a decode of `input`, cuts it at the given timestamps into per-track
