@@ -1,0 +1,19 @@
+# Build products
+.build/
+DerivedData/
+*.o
+*.swiftmodule
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+
+# macOS
+.DS_Store
+
+# Phase 0 spike scratch output (regenerate with split-spike)
+Spikes/**/spike-out/
+spike-out/
+
+# XcodeGen output — enable in Phase 1 once project.yml exists:
+# SetSplitter.xcodeproj/
