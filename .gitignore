@@ -1,3 +1,6 @@
+# XcodeGen output — regenerate with `make gen`
+SetSplitter.xcodeproj/
+
 # Build products
 .build/
 DerivedData/
@@ -14,6 +17,3 @@ xcuserdata/
 # Phase 0 spike scratch output (regenerate with split-spike)
 Spikes/**/spike-out/
 spike-out/
-
-# XcodeGen output — enable in Phase 1 once project.yml exists:
-# SetSplitter.xcodeproj/

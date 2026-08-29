@@ -1,0 +1,54 @@
+name: SetSplitter
+
+options:
+  bundleIdPrefix: com.jasonzhang
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_LANGUAGE: en
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+
+packages:
+  SetSplitterCore:
+    path: Packages/SetSplitterCore
+
+targets:
+  SetSplitter:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jasonzhang.SetSplitter
+        PRODUCT_NAME: SetSplitter
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: App/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/Resources/SetSplitter.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        COMBINE_HIDPI_IMAGES: YES
+        ENABLE_PREVIEWS: YES
+    dependencies:
+      - package: SetSplitterCore
+        product: SetSplitterCore
+
+schemes:
+  SetSplitter:
+    build:
+      targets:
+        SetSplitter: all
+    run:
+      config: Debug
+    test:
+      config: Debug
