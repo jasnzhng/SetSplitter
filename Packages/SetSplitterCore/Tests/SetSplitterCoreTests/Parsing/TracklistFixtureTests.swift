@@ -19,6 +19,14 @@ import Testing
 @Suite("Tracklist fixtures (§9)")
 struct TracklistFixtureTests {
 
+    /// Guards against the loader silently degrading to zero cases (a missing
+    /// fixtures directory would otherwise make the parameterized test vacuously
+    /// pass). Bump this when adding a fixture.
+    @Test("the §9 fixture corpus is present")
+    func corpusIsLoaded() {
+        #expect(TracklistFixture.all.count == 8, "expected 8 fixtures, loaded \(TracklistFixture.all.count)")
+    }
+
     @Test("fixture round-trips", arguments: TracklistFixture.all)
     func fixtureParsesToExpectation(_ fixture: TracklistFixture) throws {
         let result = TracklistParser().parse(text: fixture.input, options: fixture.options)
