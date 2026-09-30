@@ -19,14 +19,19 @@ enum Theme {
     static let quick = Animation.snappy(duration: 0.22)
 }
 
+extension Font {
+
+    /// Editorial serif for headlines and big numerals: the liner-notes voice of the app.
+    static func display(_ size: CGFloat, weight: Font.Weight = .semibold) -> Font {
+        .system(size: size, weight: weight, design: .serif)
+    }
+}
+
 extension View {
 
-    /// A quiet elevated surface: control-background fill, hairline separator.
+    /// A frosted surface that lets the living backdrop show through, with a hairline edge.
     func card(radius: CGFloat = Theme.cardRadius) -> some View {
-        background(
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
-        )
+        background(.regularMaterial, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: radius, style: .continuous)
                 .strokeBorder(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.5)

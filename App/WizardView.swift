@@ -22,7 +22,7 @@ struct WizardView: View {
             footer
         }
         .frame(minWidth: 900, minHeight: 640)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background { LivingBackdrop(palette: ArtPalette.resting(for: store.step)) }
         .environment(store)
     }
 

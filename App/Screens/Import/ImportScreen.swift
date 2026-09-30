@@ -20,7 +20,7 @@ struct ImportScreen: View {
         VStack(spacing: 22) {
             VStack(spacing: 6) {
                 Text("Import your set")
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.display(34))
                 Text("One long \(SupportedAudio.displayName) in, a gapless album out.")
                     .font(.title3)
                     .foregroundStyle(.secondary)

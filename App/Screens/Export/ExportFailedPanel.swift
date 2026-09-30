@@ -19,7 +19,7 @@ struct ExportFailedPanel: View {
                 .foregroundStyle(.red)
                 .accessibilityHidden(true)
             Text("The export didn't finish")
-                .font(.system(size: 24, weight: .semibold))
+                .font(.display(28))
             Text(message)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

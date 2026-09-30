@@ -29,7 +29,7 @@ struct ExportDonePanel: View {
 
             VStack(spacing: 5) {
                 Text("Your album is ready")
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.display(34))
                 Text("\(result.files.count) \(result.files.count == 1 ? "track" : "tracks") written to")
                     .foregroundStyle(.secondary)
                 Text((result.folder.path as NSString).abbreviatingWithTildeInPath)

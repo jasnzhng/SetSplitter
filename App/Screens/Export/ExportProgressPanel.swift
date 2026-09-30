@@ -23,7 +23,7 @@ struct ExportProgressPanel: View {
             // below stays a separate, focusable element.
             VStack(spacing: 4) {
                 Text(percent)
-                    .font(.system(size: 64, weight: .thin).monospacedDigit())
+                    .font(.display(76, weight: .ultraLight).monospacedDigit())
                     .contentTransition(.numericText(value: progress.fraction))
                     .animation(.smooth(duration: 0.3), value: percent)
                 Text(progress.phase == .finalizing ? "Finishing up…" : "Track \(progress.currentTrack) of \(progress.trackCount)")

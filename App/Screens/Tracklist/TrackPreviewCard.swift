@@ -47,10 +47,7 @@ struct TrackPreviewCard: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: Theme.rowRadius, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
-        )
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.rowRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.rowRadius, style: .continuous)
                 .strokeBorder(isHighlighted ? Color.accentColor.opacity(0.7) : Color(nsColor: .separatorColor).opacity(0.5),
