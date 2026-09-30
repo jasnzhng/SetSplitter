@@ -26,7 +26,7 @@ struct ExportFailedPanel: View {
                 .frame(maxWidth: 440)
                 .fixedSize(horizontal: false, vertical: true)
             Button("Back to Settings", action: onRetry)
-                .buttonStyle(.borderedProminent)
+                .glassButtonStyle(prominent: true)
                 .controlSize(.large)
         }
         .padding(Theme.pagePadding)

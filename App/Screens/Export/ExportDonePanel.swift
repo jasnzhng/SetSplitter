@@ -42,8 +42,9 @@ struct ExportDonePanel: View {
 
             HStack(spacing: 10) {
                 Button("Reveal in Finder", systemImage: "folder", action: onReveal)
-                    .buttonStyle(.borderedProminent)
+                    .glassButtonStyle(prominent: true)
                 Button("Back to Settings", action: onEdit)
+                    .glassButtonStyle()
             }
             .controlSize(.large)
 

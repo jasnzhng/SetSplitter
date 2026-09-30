@@ -49,6 +49,7 @@ struct ExportProgressPanel: View {
 
             Button("Cancel", role: .cancel, action: onCancel)
                 .controlSize(.large)
+                .glassButtonStyle()
                 .keyboardShortcut(.cancelAction)
         }
         .padding(Theme.pagePadding)

@@ -57,6 +57,7 @@ struct ArtworkPicker: View {
             } else {
                 Button("Choose Image…") { Task { await model.browseForArtwork() } }
                     .controlSize(.regular)
+                    .glassButtonStyle()
                 Text("Optional. Embedded in every track and saved as cover.jpg.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

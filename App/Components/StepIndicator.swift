@@ -2,9 +2,10 @@
 //  StepIndicator.swift
 //  SetSplitter
 //
-//  Header progress for the three-step wizard: a capsule track with a single
-//  accent pill that slides between steps. Completed steps show a check and
-//  are clickable to go back.
+//  Header progress for the three-step wizard: one Liquid Glass capsule per step,
+//  the current one tinted with the accent. Glass capsules in a group morph into
+//  each other as the step changes. Completed steps show a check and are
+//  clickable to go back.
 //
 
 import SwiftUI
@@ -18,13 +19,13 @@ struct StepIndicator: View {
     @Namespace private var pill
 
     var body: some View {
-        HStack(spacing: 2) {
-            ForEach(AppFlow.Step.allCases) { step in
-                item(step)
+        GlassGroup(spacing: 6) {
+            HStack(spacing: 6) {
+                ForEach(AppFlow.Step.allCases) { step in
+                    item(step)
+                }
             }
         }
-        .padding(3)
-        .background(Capsule().fill(Color(nsColor: .quaternarySystemFill)))
         .animation(Theme.smooth, value: current)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Progress")
@@ -36,7 +37,7 @@ struct StepIndicator: View {
         return Button {
             onSelect(step)
         } label: {
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 ZStack {
                     if isDone {
                         Image(systemName: "checkmark")
@@ -44,7 +45,7 @@ struct StepIndicator: View {
                             .transition(.scale.combined(with: .opacity))
                     } else {
                         Text("\(step.rawValue + 1)")
-                            .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
                     }
                 }
                 .frame(width: 15, height: 15)
@@ -54,19 +55,29 @@ struct StepIndicator: View {
                     .font(.system(size: 12, weight: isCurrent ? .semibold : .medium))
             }
             .foregroundStyle(isCurrent ? Color.white : (isDone ? Color.primary : Color.secondary))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 5)
-            .background {
-                if isCurrent {
-                    Capsule().fill(Color.accentColor)
-                        .matchedGeometryEffect(id: "pill", in: pill)
-                }
-            }
+            .padding(.horizontal, 13)
+            .padding(.vertical, 6)
+            .glassCapsule(tint: isCurrent ? Color.accentColor : nil, interactive: !isCurrent && canJump(step))
+            .modifier(GlassMorph(id: step.id, namespace: pill))
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(!canJump(step) || isCurrent)
         .accessibilityLabel("Step \(step.rawValue + 1), \(step.title)")
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
+    }
+}
+
+/// Lets neighbouring glass capsules morph into each other on macOS 26+ (no-op before).
+private struct GlassMorph: ViewModifier {
+    let id: Int
+    let namespace: Namespace.ID
+
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *) {
+            content.glassEffectID(id, in: namespace)
+        } else {
+            content
+        }
     }
 }

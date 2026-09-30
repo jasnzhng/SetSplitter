@@ -122,7 +122,9 @@ private struct PreviewSection: View {
                 TimelineStrip(
                     durations: store.durations, ids: store.tracks.map(\.start),
                     highlightedID: $model.highlightedStart)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .glassCapsule()
 
                 ScrollView {
                     LazyVStack(spacing: 6) {

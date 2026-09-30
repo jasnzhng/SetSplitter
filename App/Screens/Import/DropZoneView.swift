@@ -31,6 +31,7 @@ struct DropZoneView: View {
             } else {
                 Button("Browse…", action: onBrowse)
                     .controlSize(.large)
+                    .glassButtonStyle()
             }
         }
         .animation(Theme.quick, value: isTargeted)

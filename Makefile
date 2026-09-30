@@ -39,7 +39,7 @@ run: build-signed
 
 # Render every wizard state to PNGs (light + dark) headlessly; see App/Debug/SnapshotRunner.swift.
 snapshots: build
-	$(DERIVED_DATA)/Build/Products/$(CONFIG)/$(SCHEME).app/Contents/MacOS/$(SCHEME) --snapshot $(or $(OUT),.build/snapshots)
+	$(DERIVED_DATA)/Build/Products/$(CONFIG)/$(SCHEME).app/Contents/MacOS/$(SCHEME) --snapshot $(or $(OUT),.build/snapshots) --no-glass
 
 clean:
 	rm -rf $(DERIVED_DATA) $(PROJECT)

@@ -20,7 +20,7 @@ struct TrackPreviewCard: View {
     let onRevert: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             numberTile
 
             VStack(alignment: .leading, spacing: 1) {
@@ -65,15 +65,16 @@ struct TrackPreviewCard: View {
         .accessibilityElement(children: .contain)   // keep the inline editors individually reachable
     }
 
-    /// A generated cover unique to this track (stable across launches), with the
-    /// track number in the corner and an accent dot when the text was hand-edited.
+    /// The track number, with an accent dot when the text was hand-edited.
     private var numberTile: some View {
-        MiniCover(seed: "\(track.artist)|\(track.title)", size: 38, number: track.index)
+        Text("\(track.index)")
+            .font(.system(size: 12, weight: .semibold, design: .monospaced))
+            .foregroundStyle(.secondary)
+            .frame(width: 24, alignment: .trailing)
             .overlay(alignment: .topTrailing) {
                 if track.userEdited {
-                    Circle().fill(Color.accentColor).frame(width: 9, height: 9)
-                        .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
-                        .offset(x: 3, y: -3)
+                    Circle().fill(Color.accentColor).frame(width: 7, height: 7)
+                        .offset(x: 5, y: -4)
                         .help("Edited by hand")
                         .transition(.scale)
                 }

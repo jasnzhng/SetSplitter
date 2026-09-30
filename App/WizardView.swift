@@ -82,6 +82,7 @@ struct WizardView: View {
                 Button(action: actions.back) {
                     Label("Back", systemImage: "chevron.left")
                 }
+                .glassButtonStyle()
                 .transition(.opacity)
             }
             Spacer()
@@ -89,7 +90,7 @@ struct WizardView: View {
                 Button(action: actions.primary) {
                     Text(actions.primaryTitle).frame(minWidth: 84)
                 }
-                .buttonStyle(.borderedProminent)
+                .glassButtonStyle(prominent: true)
                 .disabled(!actions.primaryEnabled)
                 .transition(.opacity)
             }

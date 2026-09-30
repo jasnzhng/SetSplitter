@@ -30,12 +30,9 @@ extension Font {
 
 extension View {
 
-    /// A frosted surface that lets the living backdrop show through, with a hairline edge.
+    /// The app's standard surface: Liquid Glass over the living backdrop (a material with a
+    /// hairline edge before macOS 26).
     func card(radius: CGFloat = Theme.cardRadius) -> some View {
-        background(.regularMaterial, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .strokeBorder(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.5)
-        )
+        glassSurface(cornerRadius: radius)
     }
 }
