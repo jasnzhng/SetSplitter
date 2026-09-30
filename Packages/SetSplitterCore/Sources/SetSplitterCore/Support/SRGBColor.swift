@@ -1,5 +1,5 @@
 //
-//  RGBColor.swift
+//  SSSRGBColor.swift
 //  SetSplitterCore
 //
 //  A UI-framework-free colour value (sRGB, 0…1), so Core can produce palettes
@@ -10,7 +10,7 @@ import CoreGraphics
 import Foundation
 
 /// An sRGB colour with components in `0...1`.
-public struct RGBColor: Hashable, Sendable {
+public struct SRGBColor: Hashable, Sendable {
     public var red: Double
     public var green: Double
     public var blue: Double
@@ -31,14 +31,14 @@ public struct RGBColor: Hashable, Sendable {
     }
 
     /// Straight-line distance in RGB space (0 … √3).
-    public func distance(to other: RGBColor) -> Double {
+    public func distance(to other: SRGBColor) -> Double {
         let dr = red - other.red, dg = green - other.green, db = blue - other.blue
         return (dr * dr + dg * dg + db * db).squareRoot()
     }
 
     /// Mixes toward `other` by `amount` (0 = self, 1 = other).
-    public func mixed(with other: RGBColor, _ amount: Double) -> RGBColor {
-        RGBColor(red: red + (other.red - red) * amount,
+    public func mixed(with other: SRGBColor, _ amount: Double) -> SRGBColor {
+        SRGBColor(red: red + (other.red - red) * amount,
                  green: green + (other.green - green) * amount,
                  blue: blue + (other.blue - blue) * amount)
     }

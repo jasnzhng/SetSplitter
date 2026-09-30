@@ -7,7 +7,7 @@
 //
 //  Method: shrink the image to ~32 px, bucket every pixel into a 4-bit-per-channel
 //  colour cube, weight buckets by how saturated they are (so a big beige sleeve
-//  doesn't beat its one red accent), ignore near-black / near-white, then pick the
+//  doesn't beat its one red accent), ignore very dark / near-white, then pick the
 //  heaviest buckets that are visibly different from each other.
 //
 
@@ -20,14 +20,15 @@ public struct CoverPalette: Sendable {
     public init() {}
 
     /// Up to `count` dominant colours, most prominent first. Empty if the image can't be decoded.
-    public func extract(from imageData: Data, count: Int = 3) -> [RGBColor] {
+    public func extract(from imageData: Data, count: Int = 3) -> [SRGBColor] {
         guard let pixels = Self.samplePixels(imageData) else { return [] }
 
         struct Bucket { var weight = 0.0; var r = 0.0; var g = 0.0; var b = 0.0 }
         var buckets: [Int: Bucket] = [:]
         for color in pixels {
-            // Skip near-black and near-white, unless they're clearly tinted.
-            if (color.luma < 0.07 || color.luma > 0.97) && color.saturation < 0.25 { continue }
+            // Too dark to be a useful palette colour (even if slightly tinted), and near-white
+            // unless it's clearly tinted.
+            if color.luma < 0.10 || (color.luma > 0.97 && color.saturation < 0.25) { continue }
             let key = Int(color.red * 15) << 8 | Int(color.green * 15) << 4 | Int(color.blue * 15)
             var bucket = buckets[key, default: Bucket()]
             let weight = 1 + 3 * color.saturation
@@ -37,9 +38,9 @@ public struct CoverPalette: Sendable {
         }
 
         let ranked = buckets.values.sorted { $0.weight > $1.weight }
-        var chosen: [RGBColor] = []
+        var chosen: [SRGBColor] = []
         for bucket in ranked {
-            let color = RGBColor(red: bucket.r / bucket.weight, green: bucket.g / bucket.weight, blue: bucket.b / bucket.weight)
+            let color = SRGBColor(red: bucket.r / bucket.weight, green: bucket.g / bucket.weight, blue: bucket.b / bucket.weight)
             if chosen.allSatisfy({ $0.distance(to: color) > 0.30 }) { chosen.append(color) }
             if chosen.count == count { break }
         }
@@ -48,7 +49,7 @@ public struct CoverPalette: Sendable {
 
     // MARK: Sampling
 
-    private static func samplePixels(_ data: Data) -> [RGBColor]? {
+    private static func samplePixels(_ data: Data) -> [SRGBColor]? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -73,7 +74,7 @@ public struct CoverPalette: Sendable {
             let alpha = Double(bytes[i + 3]) / 255
             guard alpha > 0.5 else { return nil }   // ignore transparent pixels
             // Premultiplied → straight.
-            return RGBColor(red: min(1, Double(bytes[i]) / 255 / alpha),
+            return SRGBColor(red: min(1, Double(bytes[i]) / 255 / alpha),
                             green: min(1, Double(bytes[i + 1]) / 255 / alpha),
                             blue: min(1, Double(bytes[i + 2]) / 255 / alpha))
         }

@@ -20,7 +20,7 @@ struct ArtworkPicker: View {
             SectionLabel("Artwork")
 
             ZStack {
-                if let art = store.artwork, let image = NSImage(data: art.jpeg) {
+                if let art = store.artwork, let image = art.image {
                     Image(nsImage: image)
                         .resizable()
                         .accessibilityLabel("Album artwork")
@@ -55,10 +55,17 @@ struct ArtworkPicker: View {
                 .font(.caption)
                 notices(art)
             } else {
-                Button("Choose Image…") { Task { await model.browseForArtwork() } }
-                    .controlSize(.regular)
-                    .glassButtonStyle()
-                Text("Optional. Embedded in every track and saved as cover.jpg.")
+                GlassGroup(spacing: 8) {
+                    HStack(spacing: 8) {
+                        Button("Choose Image…") { Task { await model.browseForArtwork() } }
+                            .glassButtonStyle()
+                        Button("Generate", systemImage: "sparkles") { Task { await model.generateCover() } }
+                            .glassButtonStyle()
+                            .help("Make a cover from this set: its title, artist and the shape of its tracklist.")
+                    }
+                }
+                .controlSize(.regular)
+                Text("Optional. Embedded in every track and saved as cover.jpg. No art? Generate one from the set.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

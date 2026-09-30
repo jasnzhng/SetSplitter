@@ -6,6 +6,7 @@
 //  what's happening (`state`), and the record spins / the arm swings to match.
 //
 
+import AppKit
 import SwiftUI
 
 struct Turntable: View {
@@ -30,6 +31,8 @@ struct Turntable: View {
     var trackGaps: [Double] = []
     /// Static text shown on the label (it does not spin, so it stays legible).
     var labelText: String?
+    /// The album cover, shown as the record's label.
+    var labelImage: NSImage?
 
     private var isSpinning: Bool {
         switch state {
@@ -49,7 +52,7 @@ struct Turntable: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             VinylRecord(size: radius * 2, isSpinning: isSpinning,
-                        labelColors: Array(palette.colors.prefix(2)), trackGaps: trackGaps)
+                        labelColors: Array(palette.colors.prefix(2)), trackGaps: trackGaps, labelImage: labelImage)
                 .overlay {
                     if let labelText {
                         Text(labelText)

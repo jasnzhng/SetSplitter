@@ -22,7 +22,8 @@ struct ExportScreen: View {
             case .running(let progress):
                 ExportProgressPanel(progress: progress, onCancel: model.cancel).transition(Self.swap)
             case .finished(let result):
-                ExportDonePanel(result: result, onReveal: model.revealInFinder, onEdit: model.editSettings)
+                ExportDonePanel(result: result, cover: store.artwork?.image, palette: store.backdropPalette,
+                                onReveal: model.revealInFinder, onEdit: model.editSettings)
                     .transition(Self.swap)
             case .failed(let message):
                 ExportFailedPanel(message: message, onRetry: model.editSettings).transition(Self.swap)

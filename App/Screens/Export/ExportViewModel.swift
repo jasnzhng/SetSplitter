@@ -60,14 +60,29 @@ final class ExportViewModel {
             return
         }
         let access = SecurityScopedAccess(url: url)
-        let preparer = artworkPreparer
-        let result = await Task.detached(priority: .userInitiated) { () -> Result<PreparedArtwork, Error> in
-            Result { try preparer.prepare(Data(contentsOf: url)) }
-        }.value
+        await install { try Data(contentsOf: url) }
         withExtendedLifetime(access) {}
+    }
+
+    /// Makes a cover from the set itself (title, artist and the tracklist's shape). Deterministic:
+    /// the same set always produces the same cover.
+    func generateCover() async {
+        let title = store.albumTitle, artist = store.albumArtist, durations = store.durations
+        await install { try CoverArtGenerator().generate(title: title, artist: artist, trackDurations: durations) }
+    }
+
+    /// Runs `produce` → `ArtworkPreparer` → `CoverPalette` off the main actor and publishes the result.
+    private func install(_ produce: @escaping @Sendable () throws -> Data) async {
+        let preparer = artworkPreparer
+        let result = await Task.detached(priority: .userInitiated) { () -> Result<(PreparedArtwork, [SRGBColor]), Error> in
+            Result {
+                let prepared = try preparer.prepare(produce())
+                return (prepared, CoverPalette().extract(from: prepared.jpeg))
+            }
+        }.value
         switch result {
-        case .success(let prepared):
-            store.artwork = Artwork(jpeg: prepared.jpeg, pixelSize: prepared.pixelSize, notices: prepared.notices)
+        case .success(let (prepared, palette)):
+            store.artwork = Artwork(prepared: prepared, palette: palette)
             artworkError = nil
         case .failure(let error):
             artworkError = (error as? LocalizedError)?.errorDescription ?? "That image couldn't be read."

@@ -159,6 +159,13 @@ final class SessionStore {
                 existingFolderPolicy: existingFolderPolicy))
     }
 
+    /// The palette behind the window. Once cover art is chosen, the Export step (and the
+    /// finished screen) take their colours from it; other steps keep their resting palette.
+    var backdropPalette: ArtPalette {
+        if step == .export, let fromCover = artwork.flatMap({ ArtPalette.from($0.palette) }) { return fromCover }
+        return .resting(for: step)
+    }
+
     // MARK: Actions
 
     func go(to step: AppFlow.Step) {

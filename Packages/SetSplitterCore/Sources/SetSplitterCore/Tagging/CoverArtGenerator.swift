@@ -54,7 +54,7 @@ public struct CoverArtGenerator: Sendable {
             ring += e * 0.012
         }
         let hole = radius * 0.30
-        ctx.setFillColor(scheme.bottom.mixed(with: RGBColor(red: 0, green: 0, blue: 0), 0.25).cgColor)
+        ctx.setFillColor(scheme.bottom.mixed(with: SRGBColor(red: 0, green: 0, blue: 0), 0.25).cgColor)
         ctx.fillEllipse(in: CGRect(x: center.x - hole, y: center.y - hole, width: hole * 2, height: hole * 2))
 
         // 3. The tracklist as a timeline strip.

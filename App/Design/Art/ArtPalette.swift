@@ -8,6 +8,7 @@
 //  window becomes a piece of the album.
 //
 
+import SetSplitterCore
 import SwiftUI
 
 struct ArtPalette: Equatable {
@@ -21,6 +22,18 @@ struct ArtPalette: Equatable {
     static let violet = Color(red: 0.48, green: 0.36, blue: 1.00)
     static let rose = Color(red: 1.00, green: 0.36, blue: 0.54)
     static let gold = Color(red: 1.00, green: 0.76, blue: 0.36)
+
+    /// A palette taken from a cover's dominant colours. Fewer than three are padded with
+    /// lighter/darker relatives so the backdrop always has three blobs to draw.
+    static func from(_ extracted: [SRGBColor]) -> ArtPalette? {
+        guard let first = extracted.first else { return nil }
+        var colors = extracted
+        let white = SRGBColor(red: 1, green: 1, blue: 1), black = SRGBColor(red: 0, green: 0, blue: 0)
+        while colors.count < 3 {
+            colors.append(colors.count == 1 ? first.mixed(with: white, 0.35) : first.mixed(with: black, 0.35))
+        }
+        return ArtPalette(colors: colors.prefix(3).map { Color(red: $0.red, green: $0.green, blue: $0.blue) })
+    }
 
     /// Resting palette for a wizard step.
     static func resting(for step: AppFlow.Step) -> ArtPalette {

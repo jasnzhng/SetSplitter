@@ -6,6 +6,7 @@
 //  stays about state and rules, not type declarations.
 //
 
+import AppKit
 import Foundation
 import SetSplitterCore
 
@@ -19,11 +20,22 @@ struct SourceFile {
     var filename: String { url.lastPathComponent }
 }
 
-/// Prepared album artwork (already JPEG, ≤ 1400 px, square).
+/// Prepared album artwork (already JPEG, ≤ 1400 px, square), with the decoded image and the
+/// colours pulled from it, computed once so views never decode in `body`.
 struct Artwork {
     let jpeg: Data
     let pixelSize: Int
     let notices: [PreparedArtwork.Notice]
+    let palette: [SRGBColor]
+    let image: NSImage?
+
+    init(prepared: PreparedArtwork, palette: [SRGBColor]) {
+        self.jpeg = prepared.jpeg
+        self.pixelSize = prepared.pixelSize
+        self.notices = prepared.notices
+        self.palette = palette
+        self.image = NSImage(data: prepared.jpeg)
+    }
 }
 
 /// Where the album folder will be created.

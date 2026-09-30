@@ -8,6 +8,7 @@
 //  spins while `isSpinning`, and never under Reduce Motion.
 //
 
+import AppKit
 import SwiftUI
 
 struct VinylRecord: View {
@@ -19,6 +20,8 @@ struct VinylRecord: View {
     var labelColors: [Color] = [ArtPalette.coral, ArtPalette.plum]
     /// Fractions (0…1) of the groove area at which to draw a track-gap band.
     var trackGaps: [Double] = []
+    /// Replaces the plain label with this image (the album cover), turning with the record.
+    var labelImage: NSImage?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -30,8 +33,20 @@ struct VinylRecord: View {
             let angle = isSpinning && !reduceMotion
                 ? (context.date.timeIntervalSinceReferenceDate * degreesPerSecond).truncatingRemainder(dividingBy: 360)
                 : 0
-            Canvas { canvas, canvasSize in
-                draw(in: &canvas, size: canvasSize, sheenAngle: angle)
+            ZStack {
+                Canvas { canvas, canvasSize in
+                    draw(in: &canvas, size: canvasSize, sheenAngle: angle)
+                }
+                if let labelImage {
+                    Image(nsImage: labelImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: size * 0.68, height: size * 0.68)
+                        .clipShape(Circle())
+                        .overlay(Circle().strokeBorder(.white.opacity(0.25), lineWidth: 0.6))
+                        .overlay(Circle().fill(Color(white: 0.05)).frame(width: size * 0.056))   // spindle hole
+                        .rotationEffect(.degrees(angle))
+                }
             }
         }
         .frame(width: size, height: size)

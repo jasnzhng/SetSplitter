@@ -192,7 +192,7 @@ private enum SampleArtwork {
         let rep = NSBitmapImageRep(cgImage: image)
         guard let png = rep.representation(using: .png, properties: [:]),
               let prepared = try? ArtworkPreparer().prepare(png) else { return nil }
-        return Artwork(jpeg: prepared.jpeg, pixelSize: prepared.pixelSize, notices: prepared.notices)
+        return Artwork(prepared: prepared, palette: CoverPalette().extract(from: prepared.jpeg))
     }
 }
 
