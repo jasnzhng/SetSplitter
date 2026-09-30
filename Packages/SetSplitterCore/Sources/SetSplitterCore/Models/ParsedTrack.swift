@@ -13,9 +13,9 @@ import Foundation
 ///
 /// `artists` and `titles` are the structured result — arrays, never joined —
 /// so callers can render them however they like. `artist` / `title` are the
-/// display and tag strings. A track is created by the parser and may later be
-/// edited inline by the user, which sets `userEdited` so re-parses leave it
-/// alone.
+/// display and tag strings. A track is created by the parser; inline edits are
+/// layered on top afterwards by `TrackEdits` (keyed by `start`), which also sets
+/// `userEdited`.
 public struct ParsedTrack: Hashable, Sendable, Identifiable {
 
     public let id: UUID
@@ -41,8 +41,8 @@ public struct ParsedTrack: Hashable, Sendable, Identifiable {
     /// Track-level warnings (missing artist, empty title, short track, …).
     public var warnings: [ParseWarning]
 
-    /// `true` once the user edits artist or title inline. The parser must not
-    /// overwrite a user-edited track on re-parse while its timestamp survives.
+    /// `true` when `TrackEdits` has overridden this track's artist or title.
+    /// Always `false` straight out of the parser.
     public var userEdited: Bool
 
     public init(
@@ -70,26 +70,4 @@ public struct ParsedTrack: Hashable, Sendable, Identifiable {
 
     /// Display / tag title: `titles` joined with `" / "`.
     public var title: String { titles.joined(separator: " / ") }
-}
-
-/// The full result of parsing one tracklist.
-public struct ParseResult: Sendable {
-
-    /// Tracks in tracklist order, `index` 1-based and contiguous.
-    public var tracks: [ParsedTrack]
-
-    /// Document-level warnings (no timestamps, duplicates, first not 0:00, …).
-    /// Track-level warnings live on each `ParsedTrack.warnings`.
-    public var warnings: [ParseWarning]
-
-    public init(tracks: [ParsedTrack] = [], warnings: [ParseWarning] = []) {
-        self.tracks = tracks
-        self.warnings = warnings
-    }
-
-    /// Every warning, document- and track-level, in document-then-track order.
-    /// Convenience for the UI's flat warnings list.
-    public var allWarnings: [ParseWarning] {
-        warnings + tracks.flatMap(\.warnings)
-    }
 }

@@ -7,7 +7,8 @@
 //  marker is a one-line change — no new branch anywhere else.
 //
 //  Matching rules (applied by the stages, not here):
-//   * all markers are matched case-insensitively and whitespace-tolerantly
+//   * all markers are matched case-insensitively; artist/title separators
+//     include their surrounding spaces (" - "), so hyphenated names survive
 //   * artist / title / feat markers are only recognised at paren/bracket
 //     depth 0 (see DepthAwareSplitter)
 //   * NEVER split an artist on "&", "and", or "," — those are deliberately
@@ -44,10 +45,8 @@ enum SeparatorTable {
         "w/",     // lowercase variant
     ]
 
-    /// The spelled-out entry separator. Only treated as one when a `|` chunk
-    /// leader follows it (see `EntrySplitter`), so ordinary titles containing
-    /// the word "with" are left intact.
-    static let spelledEntrySeparator = "with"
+    // (The spelled-out "with" separator needs a lookahead for a following `|`, so it
+    //  lives as a regex in `EntrySplitter` rather than as a plain string here.)
 
     // MARK: Artist-side separators (§5.4b)
 

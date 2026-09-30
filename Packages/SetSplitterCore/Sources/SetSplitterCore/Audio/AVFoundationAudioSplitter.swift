@@ -9,22 +9,6 @@
 
 import AVFoundation
 
-/// Cuts the source into files. Protocol so `ExportJob` can be tested with stubs.
-public protocol AudioSplitting: Sendable {
-    /// Writes one `.m4a` per planned track into `directory` (which must exist)
-    /// and returns their URLs in track order. Throws `CancellationError` if
-    /// the surrounding task is cancelled; partial files are removed.
-    func split(
-        source: URL,
-        sourceInfo: AudioSourceInfo,
-        plan: [PlannedTrack],
-        directory: URL,
-        settings: ExportSettings,
-        metadata: AlbumMetadata,
-        progress: @escaping @Sendable (ExportProgress) -> Void
-    ) async throws -> [URL]
-}
-
 public struct AVFoundationAudioSplitter: AudioSplitting {
 
     public init() {}
@@ -172,18 +156,5 @@ public struct AVFoundationAudioSplitter: AudioSplitting {
         return try TrackWriter(
             outputURL: directory.appendingPathComponent(planned.filename),
             encoderSettings: encoder, metadata: items)
-    }
-}
-
-/// Rate-limits progress callbacks to ~10 Hz. Only touched from the split loop.
-private final class ProgressThrottle {
-    private let interval: Duration
-    private var last: ContinuousClock.Instant?
-    init(interval: Duration) { self.interval = interval }
-    func shouldEmit() -> Bool {
-        let now = ContinuousClock.now
-        if let last, now - last < interval { return false }
-        last = now
-        return true
     }
 }

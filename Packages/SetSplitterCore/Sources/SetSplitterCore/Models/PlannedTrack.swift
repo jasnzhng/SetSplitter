@@ -42,6 +42,4 @@ public struct PlannedTrack: Sendable, Identifiable {
     public var displayArtist: String {
         track.artist.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-
-    public var frameCount: Int64 { range.upperBound - range.lowerBound }
 }

@@ -8,26 +8,6 @@
 
 import Foundation
 
-/// The planner's output.
-public struct ExportPlan: Sendable {
-
-    public var tracks: [PlannedTrack]
-
-    /// Document-level warnings the planner produced (e.g. dropped tracks).
-    public var warnings: [ParseWarning]
-
-    public init(tracks: [PlannedTrack], warnings: [ParseWarning] = []) {
-        self.tracks = tracks
-        self.warnings = warnings
-    }
-
-    /// `true` when the ranges are contiguous: each track starts exactly where
-    /// the previous one ended, with no overlap and no gap.
-    public var isContiguous: Bool {
-        zip(tracks, tracks.dropFirst()).allSatisfy { $0.range.upperBound == $1.range.lowerBound }
-    }
-}
-
 /// Converts `ParsedTrack`s into `PlannedTrack`s.
 public struct ExportPlanner: Sendable {
 
@@ -37,7 +17,7 @@ public struct ExportPlanner: Sendable {
     ///   - tracks: Parser output (possibly user-edited), in tracklist order.
     ///   - source: Inspected source audio.
     ///   - leadIn: What to do with audio before the first timestamp.
-    ///   - album: Used to name the single track when `tracks` is empty.
+    ///   - albumTitle: Used to name the single track when `tracks` is empty.
     ///   - template: Filename layout.
     ///
     /// Ranges tile `[firstStart, totalFrames)` where `firstStart` is `0`
@@ -68,7 +48,13 @@ public struct ExportPlanner: Sendable {
             .sorted { ($0.element.frame, $0.offset) < ($1.element.frame, $1.offset) }
             .map(\.element)
         var kept: [(track: ParsedTrack, frame: Int64)] = []
-        for c in candidates where kept.last?.frame != c.frame { kept.append(c) }
+        for c in candidates {
+            if kept.last?.frame == c.frame {
+                warnings.append(.duplicateTimestamp(c.track.start))   // two tracks land on the same sample
+            } else {
+                kept.append(c)
+            }
+        }
 
         // Empty (or fully dropped) tracklist → one track named after the album.
         if kept.isEmpty {
@@ -103,7 +89,7 @@ public struct ExportPlanner: Sendable {
             // The parser only sees gaps between timestamps; the last track's
             // length depends on the real duration, so re-check it here.
             let seconds = Double(ranges[i].upperBound - ranges[i].lowerBound) / source.sampleRate
-            if seconds < 5, !track.warnings.contains(.trackShorterThanFiveSeconds) {
+            if seconds < TrackTiming.shortTrackThreshold, !track.warnings.contains(.trackShorterThanFiveSeconds) {
                 track.warnings.append(.trackShorterThanFiveSeconds)
             }
             planned.append(PlannedTrack(track: track, range: ranges[i], trackNumber: i + 1, filename: names[i]))

@@ -9,6 +9,9 @@ import Foundation
 
 public enum TrackTiming {
 
+    /// Tracks shorter than this (seconds) get a "very short" warning.
+    public static let shortTrackThreshold: Double = 5
+
     /// Duration in seconds of each track: `next.start - this.start`, and for
     /// the last track `sourceDuration - this.start`. Never negative.
     public static func durations(of tracks: [ParsedTrack], sourceDuration: Double) -> [Double] {

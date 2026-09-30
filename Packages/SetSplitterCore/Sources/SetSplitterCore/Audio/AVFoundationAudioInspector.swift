@@ -8,11 +8,6 @@
 
 import AVFoundation
 
-/// Inspects an audio file. Protocol so view models can be tested with stubs.
-public protocol AudioInspecting: Sendable {
-    func inspect(url: URL) async throws -> AudioSourceInfo
-}
-
 public struct AVFoundationAudioInspector: AudioInspecting {
 
     public init() {}
@@ -31,6 +26,10 @@ public struct AVFoundationAudioInspector: AudioInspecting {
                   let asbd = CMAudioFormatDescriptionGetStreamBasicDescription(fd)?.pointee,
                   asbd.mSampleRate > 0, asbd.mChannelsPerFrame > 0
             else { throw InspectionError.noAudioTrack }
+
+            guard asbd.mChannelsPerFrame <= 2 else {
+                throw InspectionError.unsupportedChannels(Int(asbd.mChannelsPerFrame))
+            }
 
             let duration = try await asset.load(.duration).seconds
             guard duration.isFinite, duration > 0 else { throw InspectionError.emptyAudio }

@@ -9,43 +9,6 @@
 
 import Foundation
 
-/// Everything one export needs.
-public struct ExportRequest: Sendable {
-    public var source: URL
-    public var sourceInfo: AudioSourceInfo
-    public var tracks: [ParsedTrack]
-    public var leadIn: ParseOptions.LeadInStrategy
-    public var album: AlbumMetadata
-    public var settings: ExportSettings
-
-    public init(
-        source: URL, sourceInfo: AudioSourceInfo, tracks: [ParsedTrack],
-        leadIn: ParseOptions.LeadInStrategy, album: AlbumMetadata, settings: ExportSettings
-    ) {
-        self.source = source
-        self.sourceInfo = sourceInfo
-        self.tracks = tracks
-        self.leadIn = leadIn
-        self.album = album
-        self.settings = settings
-    }
-}
-
-/// A finished export.
-public struct ExportResult: Sendable {
-    public var folder: URL
-    public var files: [URL]
-    public var coverURL: URL?
-    public var warnings: [ParseWarning]
-
-    public init(folder: URL, files: [URL], coverURL: URL?, warnings: [ParseWarning] = []) {
-        self.folder = folder
-        self.files = files
-        self.coverURL = coverURL
-        self.warnings = warnings
-    }
-}
-
 public struct ExportJob: Sendable {
 
     private let splitter: any AudioSplitting
@@ -104,7 +67,9 @@ public struct ExportJob: Sendable {
         var cover: URL?
         if let jpeg = request.album.artworkJPEG {
             let url = temp.appendingPathComponent("cover.jpg")
-            try jpeg.write(to: url)
+            do { try jpeg.write(to: url) } catch {
+                throw ExportError.cannotCreateFolder("The cover image couldn't be saved. \(error.localizedDescription)")
+            }
             cover = url
         }
 
@@ -114,15 +79,22 @@ public struct ExportJob: Sendable {
             totalFrames: request.sourceInfo.totalFrames, currentTrack: plan.tracks.count,
             trackCount: plan.tracks.count, currentTitle: ""))
 
-        if fm.fileExists(atPath: final.path) {   // only reachable with `.replace`
-            do { try fm.trashItem(at: final, resultingItemURL: nil) } catch {
-                throw ExportError.cannotCreateFolder("The existing folder couldn't be moved to the Trash. \(error.localizedDescription)")
+        // `.replace`: move the old album aside first and trash it only once the new one is in
+        // place, so a failed move can put it back instead of losing both.
+        var displaced: URL?
+        if fm.fileExists(atPath: final.path) {
+            let aside = settings.outputDirectory.appendingPathComponent(".SetSplitter-old-\(UUID().uuidString)", isDirectory: true)
+            do { try fm.moveItem(at: final, to: aside) } catch {
+                throw ExportError.cannotCreateFolder("The existing folder couldn't be replaced. \(error.localizedDescription)")
             }
+            displaced = aside
         }
         do { try fm.moveItem(at: temp, to: final) } catch {
+            if let displaced { try? fm.moveItem(at: displaced, to: final) }   // restore the old album
             throw ExportError.cannotCreateFolder(error.localizedDescription)
         }
         succeeded = true
+        if let displaced { Self.discard(displaced, keptAs: final) }
 
         let moved = { (u: URL) in final.appendingPathComponent(u.lastPathComponent) }
         progress(ExportProgress(
@@ -130,5 +102,15 @@ public struct ExportJob: Sendable {
             totalFrames: request.sourceInfo.totalFrames, currentTrack: plan.tracks.count,
             trackCount: plan.tracks.count, currentTitle: ""))
         return ExportResult(folder: final, files: files.map(moved), coverURL: cover.map(moved), warnings: plan.warnings)
+    }
+
+    /// Trashes the replaced album; if the Trash refuses, keeps it visibly as
+    /// "<name> (replaced)" rather than leaving a hidden folder of the user's audio behind.
+    private static func discard(_ url: URL, keptAs final: URL) {
+        let fm = FileManager.default
+        if (try? fm.trashItem(at: url, resultingItemURL: nil)) != nil { return }
+        let visible = final.deletingLastPathComponent()
+            .appendingPathComponent("\(final.lastPathComponent) (replaced)", isDirectory: true)
+        try? fm.moveItem(at: url, to: visible)
     }
 }

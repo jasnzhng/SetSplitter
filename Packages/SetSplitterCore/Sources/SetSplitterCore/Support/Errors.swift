@@ -14,6 +14,7 @@ public enum InspectionError: Error, LocalizedError, Equatable {
     case unreadable(String)
     case noAudioTrack
     case emptyAudio
+    case unsupportedChannels(Int)
 
     public var errorDescription: String? {
         switch self {
@@ -23,6 +24,8 @@ public enum InspectionError: Error, LocalizedError, Equatable {
             return "This file doesn't contain an audio track."
         case .emptyAudio:
             return "This audio file appears to be empty."
+        case .unsupportedChannels(let count):
+            return "This file has \(count) audio channels; only mono and stereo are supported."
         }
     }
 }

@@ -34,7 +34,9 @@ final class TrackWriter {
         writer.startSession(atSourceTime: .zero)
     }
 
-    /// Appends a buffer, suspending (not spinning) until the encoder can take it.
+    /// Appends a buffer. When the encoder isn't ready it naps 1 ms and re-checks
+    /// (the §7.5 polling fallback: simpler than bridging `requestMediaDataWhenReady`).
+    /// The nap is an `await`, so the thread is released rather than blocked.
     func append(_ buffer: CMSampleBuffer) async throws {
         while !input.isReadyForMoreMediaData {
             try Task.checkCancellation()
@@ -60,7 +62,7 @@ final class TrackWriter {
     private static func map(_ error: Error?) -> ExportError {
         guard let error else { return .writerFailed("Unknown encoder error.") }
         let ns = error as NSError
-        if ns.code == AVError.diskFull.rawValue
+        if (ns.domain == AVFoundationErrorDomain && ns.code == AVError.diskFull.rawValue)
             || (ns.domain == NSPOSIXErrorDomain && ns.code == Int(ENOSPC))
             || (ns.domain == NSCocoaErrorDomain && ns.code == NSFileWriteOutOfSpaceError)
             || (ns.userInfo[NSUnderlyingErrorKey] as? NSError)?.code == Int(ENOSPC) {

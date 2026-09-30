@@ -30,7 +30,7 @@ struct TrackAssembler {
             artists.append(contentsOf: credit.artists)
             titles.append(contentsOf: credit.titles)
         }
-        artists = dedupe(artists)
+        artists = TextHelpers.dedupedCaseInsensitively(artists)
 
         var warnings = Set<ParseWarning>()
         for credit in used {
@@ -54,15 +54,6 @@ struct TrackAssembler {
     }
 
     // MARK: - Helpers
-
-    private func dedupe(_ names: [String]) -> [String] {
-        var seen = Set<String>()
-        var out: [String] = []
-        for n in names where !n.isEmpty {
-            if seen.insert(n.lowercased()).inserted { out.append(n) }
-        }
-        return out
-    }
 
     /// Deterministic order so tests and the UI list are stable.
     private func orderedWarnings(from set: Set<ParseWarning>) -> [ParseWarning] {

@@ -22,7 +22,7 @@ struct SegmentCleaner {
     private let leadingNumberDot = /^\s*#?\d{1,3}\s*[.)]\s+/          // "01. " "1) " "#3. "
     private let leadingBracketNumber = /^\s*\[\d{1,3}\]\s*/           // "[1] "
     private let leadingHashNumber = /^\s*#\d{1,3}\s+/                 // "#1 "
-    private let leadingNumberDash = /^\s*\d{1,3}\s*[-–—]\s+/          // "1 - "
+    private let leadingNumberDash = /^\s*\d{1,3}\s*[-–—]\s+/          // "1 - " (guarded, see `stripNumberDash`)
 
     // The next entry's numbering, left dangling on the end of a one-line list.
     private let trailingNumber = /\s*\b\d{1,3}\s*[.)]\s*$/
@@ -42,14 +42,13 @@ struct SegmentCleaner {
             s = s.replacing(leadingNumberDot, with: "")
             s = s.replacing(leadingBracketNumber, with: "")
             s = s.replacing(leadingHashNumber, with: "")
-            s = s.replacing(leadingNumberDash, with: "")
+            s = stripNumberDash(from: s)
             s = s.replacing(leadingLeaders, with: "")
             s = s.trimmingCharacters(in: .whitespaces)
             changed = (s != before)
         }
 
-        // Trailing numbering that belongs to the next entry.
-        s = s.replacing(trailingNumber, with: "")
+        s = stripTrailingNumber(from: s)
 
         if options.stripBracketedTags {
             s = stripNoiseTags(from: s)
@@ -60,6 +59,32 @@ struct SegmentCleaner {
     }
 
     // MARK: - Helpers
+
+    /// Strips a leading `"1 - "` only when what follows still looks like a full
+    /// `Artist - Title` entry. Otherwise the number *is* the artist ("311 - Amber",
+    /// "112 - Cupid") and must survive.
+    private func stripNumberDash(from text: String) -> String {
+        guard let match = text.firstMatch(of: leadingNumberDash) else { return text }
+        let rest = String(text[match.range.upperBound...])
+        let hasOwnSeparator = SeparatorTable.artistTitleSeparators.contains { rest.contains($0) }
+        return hasOwnSeparator ? rest : text
+    }
+
+    /// Strips the next entry's dangling numbering (`"… (Intro Edit) 02."`), but not
+    /// a number that closes a bracket the title opened (`"Song (Vol 2)"`).
+    private func stripTrailingNumber(from text: String) -> String {
+        guard let match = text.firstMatch(of: trailingNumber) else { return text }
+        let prefix = text[..<match.range.lowerBound]
+        return hasUnclosedBracket(prefix) ? text : String(prefix)
+    }
+
+    private func hasUnclosedBracket(_ text: Substring) -> Bool {
+        var depth = 0
+        for ch in text {
+            if "([".contains(ch) { depth += 1 } else if ")]".contains(ch) { depth = max(0, depth - 1) }
+        }
+        return depth > 0
+    }
 
     /// Removes `[...]` / `(...)` groups whose contents are a known promo tag.
     /// Musical parentheticals ("(Eli Brown Remix)", "(Acappella)") are kept.

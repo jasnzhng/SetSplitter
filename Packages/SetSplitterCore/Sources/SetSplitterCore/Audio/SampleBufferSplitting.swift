@@ -10,26 +10,6 @@ import CoreMedia
 //  API worked on every split there, the manual block-buffer path is a fallback.
 //
 
-enum SampleSplitError: Error, LocalizedError {
-    case missingFormatDescription
-    case missingDataBuffer
-    case notInterleavedFloat
-    case splitPointOutsideBuffer
-    case blockBufferCreateFailed(OSStatus)
-    case sampleBufferCreateFailed(OSStatus)
-    case retimeFailed(OSStatus)
-
-    var errorDescription: String? {
-        "The decoded audio couldn't be cut at a track boundary (\(self))."
-    }
-}
-
-/// The two halves of a buffer cut at a frame index.
-struct SplitOutcome {
-    let head: CMSampleBuffer
-    let tail: CMSampleBuffer
-}
-
 enum SampleBufferSplitting {
     /// Splits `buffer` into `[0, headFrames)` and `[headFrames, count)`.
     /// Prefers `CMSampleBufferCopySampleBufferForRange`; falls back to manual slicing.
@@ -77,7 +57,8 @@ enum SampleBufferSplitting {
         var dataPtr: UnsafeMutablePointer<Int8>?
         let acc = CMBlockBufferGetDataPointer(src, atOffset: 0, lengthAtOffsetOut: &lengthAtOffset,
                                               totalLengthOut: &totalLength, dataPointerOut: &dataPtr)
-        guard acc == kCMBlockBufferNoErr, let base = dataPtr else {
+        // `lengthAtOffset` is only the contiguous run; reading `totalLength` bytes past it would be out of bounds.
+        guard acc == kCMBlockBufferNoErr, let base = dataPtr, lengthAtOffset >= totalLength else {
             throw SampleSplitError.missingDataBuffer
         }
 
