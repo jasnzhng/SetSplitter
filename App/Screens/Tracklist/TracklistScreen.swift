@@ -41,8 +41,17 @@ private struct TracklistEditor: View {
     var body: some View {
         @Bindable var store = store
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                SectionLabel("Tracklist")
+            // The count sits under the title (not below the box) so the editor's bottom edge lines up
+            // with the preview list on the right.
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    SectionLabel("Tracklist")
+                    Text(footerText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
+                        .animation(Theme.quick, value: store.parseResult.tracks.count)
+                }
                 Spacer()
                 Button("Paste", systemImage: "doc.on.clipboard", action: model.pasteFromClipboard)
                 Button("Clear", systemImage: "xmark.circle", action: model.clearText)
@@ -58,19 +67,16 @@ private struct TracklistEditor: View {
                     .scrollContentBackground(.hidden)
                     .padding(8)
                 if store.tracklistText.isEmpty {
+                    // Sits where the editor's first line does: its 8 pt padding plus the text view's
+                    // 5 pt line-fragment padding across, and no top inset, so the caret lines up.
                     placeholder
-                        .padding(14)
+                        .padding(.leading, 13)
+                        .padding(.top, 8)
                         .allowsHitTesting(false)
                 }
             }
             .card()
             .accessibilityLabel("Tracklist text")
-
-            Text(footerText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .contentTransition(.numericText())
-                .animation(Theme.quick, value: store.parseResult.tracks.count)
         }
     }
 
@@ -149,6 +155,7 @@ private struct PreviewSection: View {
                     .padding(.trailing, 2)
                 }
                 .scrollIndicators(.automatic)
+                .moreBelowBlur()
                 .frame(maxHeight: .infinity)
             }
 

@@ -33,6 +33,70 @@ struct CoverArtTests {
         return (0.2126 * r + 0.7152 * g + 0.0722 * b, r, g, b)
     }
 
+    /// Fraction (0…1) of near-white pixels inside a normalised rect (origin top-left) — i.e. where the title's ink is.
+    private func ink(_ png: Data, in rect: CGRect) -> Double {
+        let source = CGImageSourceCreateWithData(png as CFData, nil)!
+        let image = CGImageSourceCreateImageAtIndex(source, 0, nil)!
+        let n = 100
+        let ctx = CGContext(data: nil, width: n, height: n, bitsPerComponent: 8, bytesPerRow: n * 4,
+                            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: n, height: n))
+        let bytes = ctx.data!.assumingMemoryBound(to: UInt8.self)
+        var white = 0, total = 0
+        for row in Int(rect.minY * Double(n))..<Int(rect.maxY * Double(n)) {          // row 0 is the top of the image
+            for col in Int(rect.minX * Double(n))..<Int(rect.maxX * Double(n)) {
+                let i = (row * n + col) * 4
+                total += 1
+                if bytes[i] > 235 && bytes[i + 1] > 235 && bytes[i + 2] > 235 { white += 1 }
+            }
+        }
+        return Double(white) / Double(total)
+    }
+
+    private let top = CGRect(x: 0, y: 0, width: 1, height: 0.33), bottom = CGRect(x: 0, y: 0.67, width: 1, height: 0.33)
+    private let left = CGRect(x: 0, y: 0, width: 0.3, height: 1), right = CGRect(x: 0.7, y: 0, width: 0.3, height: 1)
+
+    @Test("vertical position moves the title to the top, middle or bottom")
+    func verticalPosition() throws {
+        let g = CoverArtGenerator()
+        func render(_ p: CoverTextStyle.Position) throws -> Data {
+            try g.generate(title: "Top Bottom", style: CoverStyle(text: CoverTextStyle(position: p)), edge: 400)
+        }
+        let atTop = try render(.top), atBottom = try render(.bottom), middle = try render(.middle)
+        #expect(ink(atTop, in: top) > 0.02 && ink(atTop, in: bottom) == 0)
+        #expect(ink(atBottom, in: bottom) > 0.02 && ink(atBottom, in: top) == 0)
+        #expect(ink(middle, in: top) == 0 && ink(middle, in: bottom) == 0)
+    }
+
+    @Test("horizontal alignment pushes short lines left or right")
+    func horizontalAlignment() throws {
+        let g = CoverArtGenerator()
+        func render(_ a: CoverTextStyle.Alignment) throws -> Data {
+            try g.generate(title: "Hi\nthere", style: CoverStyle(text: CoverTextStyle(size: 0.6, alignment: a)), edge: 400)
+        }
+        let l = try render(.leading), c = try render(.center), r = try render(.trailing)
+        #expect(ink(l, in: left) > 0 && ink(l, in: right) == 0)
+        #expect(ink(r, in: right) > 0 && ink(r, in: left) == 0)
+        #expect(ink(c, in: left) == 0 && ink(c, in: right) == 0)
+    }
+
+    @Test("size scales the title, line spacing changes a multi-line block, shadow can be switched off")
+    func sizeSpacingShadow() throws {
+        let g = CoverArtGenerator()
+        let title = "Two Words"
+        func render(_ t: CoverTextStyle) throws -> Data { try g.generate(title: title, style: CoverStyle(text: t), edge: 400) }
+        let whole = CGRect(x: 0, y: 0, width: 1, height: 1)
+        #expect(ink(try render(CoverTextStyle(size: 1.2)), in: whole) > ink(try render(CoverTextStyle(size: 0.6)), in: whole))
+        #expect(try render(CoverTextStyle(size: 1.2, lineSpacing: 0.8)) != render(CoverTextStyle(size: 1.2, lineSpacing: 1.2)))
+        #expect(try render(CoverTextStyle(shadow: true)) != render(CoverTextStyle(shadow: false)))
+    }
+
+    @Test("out-of-range text settings are clamped, not fatal")
+    func clamps() throws {
+        let png = try CoverArtGenerator().generate(title: "X", style: CoverStyle(text: CoverTextStyle(size: 99, lineSpacing: -3)), edge: 300)
+        #expect(dimensions(png)! == (300, 300))
+    }
+
     @Test("generates a square PNG of the requested size")
     func size() throws {
         let png = try CoverArtGenerator().generate(title: "Tomorrowland", edge: 700)

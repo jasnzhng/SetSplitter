@@ -33,27 +33,37 @@ struct ArtworkPicker: View {
             ArtworkPreview(
                 image: store.artwork?.image, isTargeted: isTargeted,
                 onChooseWhenEmpty: store.artworkMode == .upload ? { Task { await model.browseForArtwork() } } : nil)
+                .layoutPriority(1)
                 .animation(Theme.smooth, value: store.artwork?.jpeg.count)
                 .fileDropTarget(isTargeted: $isTargeted) { urls in
                     guard let url = urls.first else { return }
                     Task { await model.useImage(from: url) }
                 }
 
-            switch store.artworkMode {
-            case .generate: CoverDesignControls(model: model)
-            case .upload: uploadControls
-            }
+            // Only the options scroll (when the Text group is open on a short window); the preview never shrinks.
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    switch store.artworkMode {
+                    case .generate: CoverDesignControls(model: model)
+                    case .upload: uploadControls
+                    }
 
-            if let error = model.artworkError {
-                Label(error, systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                    if let error = model.artworkError {
+                        Label(error, systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
+                .padding(.horizontal, 3)   // room for slider thumbs and focus rings inside the clip
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .scrollIndicators(.automatic)
         }
         // Generate is the default, so the first visit renders straight away; after that it follows the title live.
         .task { if store.artworkMode == .generate, store.artwork == nil { model.refreshCover(debounced: false) } }
         .onChange(of: store.albumTitle) { model.refreshCover() }
         .onChange(of: store.cover.filter) { model.refreshCover(debounced: false) }
+        .onChange(of: store.cover.text) { model.refreshCover() }   // debounced: sliders fire continuously
     }
 
     private var mode: Binding<ArtworkMode> {

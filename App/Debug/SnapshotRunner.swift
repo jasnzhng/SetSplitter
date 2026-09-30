@@ -32,10 +32,11 @@ enum SnapshotRunner {
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
             for scenario in Scenario.allCases {
                 let model = AppModel(preferences: InMemoryPreferences())   // never touch the developer's real defaults
+                CoverDesignControls.startsWithTextExpanded = scenario == .exportFormPhoto
                 scenario.seed(model)
                 let root: AnyView
                 switch scenario {
-                case .turntableGallery: root = AnyView(TurntableGallery().background(LivingBackdrop(palette: .resting(for: .importFile))))
+                case .turntableGallery: root = AnyView(TurntableGallery().background(Color(nsColor: .windowBackgroundColor)))
                 case .finaleGallery: root = AnyView(FinaleGallery())
                 default: root = AnyView(WizardView(model: model))
                 }
@@ -132,6 +133,7 @@ enum SnapshotRunner {
                         store.cover.background = photo
                         store.cover.backgroundName = "IMG_2041.jpg"
                         store.cover.filter = .duotone
+                        store.cover.text = CoverTextStyle(size: 0.9, lineSpacing: 0.95, alignment: .leading, position: .bottom, shadow: false)
                     }
                     store.artwork = SampleArtwork.make(title: store.albumTitle, style: store.cover.style)
                     store.outputFolder = OutputFolder(url: URL(fileURLWithPath: "/Users/dj/Music"), access: nil)
@@ -205,7 +207,7 @@ private struct FinaleGallery: View {
         }
         .padding(8)
         .frame(width: 940, height: 660)
-        .background(LivingBackdrop(palette: .resting(for: .export)))
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     @MainActor

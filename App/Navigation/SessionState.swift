@@ -54,8 +54,9 @@ struct CoverDesign: Equatable {
     var background: Data?
     var backgroundName: String?
     var filter: CoverStyle.Filter = .none
+    var text = CoverTextStyle()
 
-    var style: CoverStyle { CoverStyle(schemeIndex: schemeIndex, background: background, filter: filter) }
+    var style: CoverStyle { CoverStyle(schemeIndex: schemeIndex, background: background, filter: filter, text: text) }
 }
 
 extension CoverStyle.Filter {

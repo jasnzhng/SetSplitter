@@ -30,8 +30,7 @@ extension Font {
 
 extension View {
 
-    /// The app's standard surface: Liquid Glass over the living backdrop (a material with a
-    /// hairline edge before macOS 26).
+    /// The app's standard surface: a Liquid Glass panel.
     func card(radius: CGFloat = Theme.cardRadius) -> some View {
         glassSurface(cornerRadius: radius)
     }

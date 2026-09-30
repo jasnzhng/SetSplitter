@@ -82,10 +82,10 @@ struct ParseOptionsPanel: View {
                 }
             }
             .controlSize(.small)
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .card()
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .card()
         .onAppear { syncCustomText() }
     }
 

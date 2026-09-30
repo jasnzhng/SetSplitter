@@ -3,7 +3,7 @@ name: SetSplitter
 options:
   bundleIdPrefix: com.jasonzhang
   deploymentTarget:
-    macOS: "14.0"
+    macOS: "26.0"
   createIntermediateGroups: true
   generateEmptyDirectories: true
 

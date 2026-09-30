@@ -26,7 +26,7 @@ Shortcuts: `⌘O` open file · `⌘[` back · `⌘↩` continue / export.
 
 ## Build
 
-Requires Xcode 16+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+Requires macOS 26+ and Xcode 26+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen)
 (`brew install xcodegen`).
 
 ```

@@ -103,7 +103,8 @@ struct ExportStage: View {
     private var recordLayer: some View {
         ZStack(alignment: .topLeading) {
             VinylRecord(size: recordDiameter, isSpinning: !finale.recordStopped,
-                        labelColors: Array(store.backdropPalette.colors.prefix(2)), trackGaps: trackGaps)
+                        labelColors: Array(store.coverPalette.colors.prefix(2)),
+                        labelArt: store.artwork?.image, trackGaps: trackGaps)
                 .offset(x: slideDistance * finale.recordSlide, y: (sleeveSize - recordDiameter) / 2)
             Tonearm(recordRadius: recordRadius, position: finale.armGone ? .rest : .playing(progress: progress.fraction))
                 .offset(y: (sleeveSize - recordDiameter) / 2)

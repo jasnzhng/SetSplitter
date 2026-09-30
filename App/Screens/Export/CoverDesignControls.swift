@@ -13,6 +13,14 @@ struct CoverDesignControls: View {
 
     let model: ExportViewModel
     @Environment(SessionStore.self) private var store
+    @State private var isTextExpanded = Self.startsWithTextExpanded
+
+    #if DEBUG
+    /// Snapshot harness hook: open the Text group so it can be reviewed.
+    @MainActor static var startsWithTextExpanded = false
+    #else
+    private static let startsWithTextExpanded = false
+    #endif
 
     var body: some View {
         @Bindable var store = store
@@ -53,7 +61,59 @@ struct CoverDesignControls: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            textControls
         }
         .animation(Theme.smooth, value: store.cover.background != nil)
+    }
+
+    // MARK: Text
+
+    private var textControls: some View {
+        @Bindable var store = store
+        return DisclosureGroup("Text", isExpanded: $isTextExpanded) {
+            VStack(alignment: .leading, spacing: 10) {
+                slider("Size", value: $store.cover.text.size, range: CoverTextStyle.sizeRange)
+                slider("Lines", value: $store.cover.text.lineSpacing, range: CoverTextStyle.lineSpacingRange)
+
+                Picker("Align", selection: $store.cover.text.alignment) {
+                    Image(systemName: "text.alignleft").tag(CoverTextStyle.Alignment.leading)
+                    Image(systemName: "text.aligncenter").tag(CoverTextStyle.Alignment.center)
+                    Image(systemName: "text.alignright").tag(CoverTextStyle.Alignment.trailing)
+                }
+                .pickerStyle(.segmented)
+                .help("Align the title left, centre or right.")
+
+                Picker("Place", selection: $store.cover.text.position) {
+                    Text("Top").tag(CoverTextStyle.Position.top)
+                    Text("Middle").tag(CoverTextStyle.Position.middle)
+                    Text("Bottom").tag(CoverTextStyle.Position.bottom)
+                }
+                .pickerStyle(.segmented)
+                .help("Where the title sits on the cover.")
+
+                HStack {
+                    Toggle("Shadow", isOn: $store.cover.text.shadow)
+                        .toggleStyle(.checkbox)
+                        .help("A soft shadow behind the letters, for readability over photos.")
+                    Spacer()
+                    Button("Reset") { store.cover.text = CoverTextStyle() }
+                        .buttonStyle(.link)
+                        .disabled(store.cover.text == CoverTextStyle())
+                }
+                .font(.callout)
+            }
+            .padding(.top, 8)
+        }
+        .font(.callout)
+    }
+
+    private func slider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
+        HStack(spacing: 8) {
+            Text(title).frame(width: 40, alignment: .leading)
+            Slider(value: value, in: range)
+                .controlSize(.small)
+        }
+        .font(.callout)
     }
 }

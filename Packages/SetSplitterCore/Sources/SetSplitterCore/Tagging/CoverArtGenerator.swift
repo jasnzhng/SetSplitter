@@ -51,7 +51,7 @@ public struct CoverArtGenerator: Sendable {
         } else {
             drawGradient(scheme, in: ctx, canvas: e, space: space)
         }
-        drawTitle(title, in: ctx, canvas: e)
+        drawTitle(title, style: style.text, in: ctx, canvas: e)
 
         guard let image = ctx.makeImage() else { throw ArtworkError.encodingFailed }
         let out = NSMutableData()
@@ -120,40 +120,55 @@ public struct CoverArtGenerator: Sendable {
 
     // MARK: Title
 
-    /// Centred block, centre-aligned, in heavy capitals; shrinks until a long title fits.
-    private func drawTitle(_ title: String, in ctx: CGContext, canvas e: CGFloat) {
+    /// A block of heavy capitals that shrinks until it fits, placed by `style`.
+    private func drawTitle(_ title: String, style: CoverTextStyle, in ctx: CGContext, canvas e: CGFloat) {
         let text = title.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard !text.isEmpty else { return }
 
-        let width = e * 0.84, maxHeight = e * 0.62
-        var size = e * 0.085
+        let margin = e * 0.08
+        let width = e - margin * 2, maxHeight = e * 0.62
+        let requested = min(max(style.size, CoverTextStyle.sizeRange.lowerBound), CoverTextStyle.sizeRange.upperBound)
+        let spacing = min(max(style.lineSpacing, CoverTextStyle.lineSpacingRange.lowerBound), CoverTextStyle.lineSpacingRange.upperBound)
+
+        var size = e * 0.085 * requested
         let minimum = e * 0.032
-        var laidOut = layout(text, size: size, width: width)
+        var laidOut = layout(text, size: size, width: width, alignment: style.alignment, lineSpacing: spacing)
         // Shrink until the block fits *and* no single word has to be broken across lines.
         while (laidOut.height > maxHeight || laidOut.widestWord > width) && size > minimum {
             size = max(minimum, size * 0.94)
-            laidOut = layout(text, size: size, width: width)
+            laidOut = layout(text, size: size, width: width, alignment: style.alignment, lineSpacing: spacing)
         }
 
-        let frameRect = CGRect(x: (e - width) / 2, y: (e - laidOut.height) / 2, width: width, height: laidOut.height)
+        let y: CGFloat = switch style.position {   // CG origin is bottom-left
+        case .top: e - margin - laidOut.height
+        case .middle: (e - laidOut.height) / 2
+        case .bottom: margin
+        }
+        let frameRect = CGRect(x: margin, y: y, width: width, height: laidOut.height)
         let frame = CTFramesetterCreateFrame(laidOut.framesetter, CFRange(location: 0, length: 0),
                                              CGPath(rect: frameRect, transform: nil), nil)
         ctx.saveGState()
-        // A soft shadow keeps the letters legible over a busy photo.
-        ctx.setShadow(offset: CGSize(width: 0, height: -e * 0.004), blur: e * 0.022,
-                      color: CGColor(red: 0, green: 0, blue: 0, alpha: 0.38))
+        if style.shadow {
+            // A soft shadow keeps the letters legible over a busy photo.
+            ctx.setShadow(offset: CGSize(width: 0, height: -e * 0.004), blur: e * 0.022,
+                          color: CGColor(red: 0, green: 0, blue: 0, alpha: 0.38))
+        }
         CTFrameDraw(frame, ctx)
         ctx.restoreGState()
     }
 
-    private func layout(_ text: String, size: CGFloat, width: CGFloat)
+    private func layout(_ text: String, size: CGFloat, width: CGFloat, alignment: CoverTextStyle.Alignment, lineSpacing: Double)
         -> (framesetter: CTFramesetter, height: CGFloat, widestWord: CGFloat) {
-        var alignment = CTTextAlignment.center
-        let paragraph = withUnsafePointer(to: &alignment) { pointer -> CTParagraphStyle in
-            var lineHeight: CGFloat = 0.88   // tight: all-caps has no descenders to leave room for
-            return withUnsafePointer(to: &lineHeight) { heightPointer in
+        var textAlignment: CTTextAlignment = switch alignment {
+        case .leading: .left
+        case .center: .center
+        case .trailing: .right
+        }
+        var lineHeight = CGFloat(lineSpacing)
+        let paragraph = withUnsafePointer(to: &textAlignment) { alignmentPointer in
+            withUnsafePointer(to: &lineHeight) { heightPointer in
                 let settings = [
-                    CTParagraphStyleSetting(spec: .alignment, valueSize: MemoryLayout<CTTextAlignment>.size, value: pointer),
+                    CTParagraphStyleSetting(spec: .alignment, valueSize: MemoryLayout<CTTextAlignment>.size, value: alignmentPointer),
                     CTParagraphStyleSetting(spec: .lineHeightMultiple, valueSize: MemoryLayout<CGFloat>.size, value: heightPointer),
                 ]
                 return CTParagraphStyleCreate(settings, settings.count)

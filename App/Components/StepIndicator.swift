@@ -58,26 +58,12 @@ struct StepIndicator: View {
             .padding(.horizontal, 13)
             .padding(.vertical, 6)
             .glassCapsule(tint: isCurrent ? Color.accentColor : nil, interactive: !isCurrent && canJump(step))
-            .modifier(GlassMorph(id: step.id, namespace: pill))
+            .glassEffectID(step.id, in: pill)   // neighbouring capsules morph into each other
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(!canJump(step) || isCurrent)
         .accessibilityLabel("Step \(step.rawValue + 1), \(step.title)")
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
-    }
-}
-
-/// Lets neighbouring glass capsules morph into each other on macOS 26+ (no-op before).
-private struct GlassMorph: ViewModifier {
-    let id: Int
-    let namespace: Namespace.ID
-
-    func body(content: Content) -> some View {
-        if #available(macOS 26.0, *) {
-            content.glassEffectID(id, in: namespace)
-        } else {
-            content
-        }
     }
 }

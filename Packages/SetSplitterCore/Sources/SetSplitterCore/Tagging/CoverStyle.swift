@@ -3,8 +3,8 @@
 //  SetSplitterCore
 //
 //  The knobs of a generated cover apart from its title: which gradient, an
-//  optional photo to use instead of the gradient, and the colour treatment that
-//  keeps the title readable over that photo.
+//  optional photo to use instead of the gradient, the colour treatment that keeps
+//  the title readable over that photo, and how the title itself is set.
 //
 
 import Foundation
@@ -28,11 +28,13 @@ public struct CoverStyle: Sendable, Equatable {
     /// Image bytes (any format ImageIO reads) drawn in place of the gradient, aspect-filled and centre-cropped.
     public var background: Data?
     public var filter: Filter
+    public var text: CoverTextStyle
 
-    public init(schemeIndex: Int = 0, background: Data? = nil, filter: Filter = .none) {
+    public init(schemeIndex: Int = 0, background: Data? = nil, filter: Filter = .none, text: CoverTextStyle = CoverTextStyle()) {
         self.schemeIndex = schemeIndex
         self.background = background
         self.filter = filter
+        self.text = text
     }
 
     public var scheme: CoverScheme {
