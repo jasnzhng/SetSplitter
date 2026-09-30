@@ -75,8 +75,66 @@ struct ExportViewModelTests {
     func rejectsRemoteArtwork() async throws {
         let (vm, store, parent) = try ready(splitter: StubSplitter())
         defer { try? FileManager.default.removeItem(at: parent) }
-        await vm.loadArtwork(from: URL(string: "https://example.com/cover.jpg")!)
+        await vm.useImage(from: URL(string: "https://example.com/cover.jpg")!)
         #expect(store.artwork == nil)
         #expect(vm.artworkError != nil)
+    }
+
+    // MARK: Generated cover
+
+    @Test("Generate is the default mode, and a refresh renders a cover from the album title")
+    func generatesByDefault() async throws {
+        let (vm, store, parent) = try ready(splitter: StubSplitter())
+        defer { try? FileManager.default.removeItem(at: parent) }
+        #expect(store.artworkMode == .generate)
+        #expect(store.artwork == nil)
+        vm.refreshCover(debounced: false)
+        #expect(await waitUntil { store.artwork != nil })
+    }
+
+    @Test("editing the title re-renders the cover; a burst of edits ends on the latest one")
+    func liveUpdate() async throws {
+        let (vm, store, parent) = try ready(splitter: StubSplitter())
+        defer { try? FileManager.default.removeItem(at: parent) }
+        vm.refreshCover(debounced: false)
+        #expect(await waitUntil { store.artwork != nil })
+        let first = store.artwork?.jpeg
+
+        for title in ["S", "Se", "Set Two"] { store.albumTitle = title; vm.refreshCover() }
+        #expect(await waitUntil { store.artwork?.jpeg != first })
+        try await Task.sleep(for: .milliseconds(600))   // let any stale render land; it must not overwrite the newest
+        store.albumTitle = "Set Two"
+        vm.refreshCover(debounced: false)
+        #expect(await waitUntil { store.artwork != nil })
+        let settled = store.artwork?.jpeg
+        try await Task.sleep(for: .milliseconds(400))
+        #expect(store.artwork?.jpeg == settled)
+    }
+
+    @Test("switching to Upload uses the uploaded image (none by default) and stops the generator")
+    func uploadMode() async throws {
+        let (vm, store, parent) = try ready(splitter: StubSplitter())
+        defer { try? FileManager.default.removeItem(at: parent) }
+        vm.refreshCover(debounced: false)
+        #expect(await waitUntil { store.artwork != nil })
+
+        vm.setArtworkMode(.upload)
+        #expect(store.artwork == nil, "Upload with no image means no artwork")
+        vm.refreshCover()   // ignored outside Generate mode
+        try await Task.sleep(for: .milliseconds(400))
+        #expect(store.artwork == nil)
+
+        vm.setArtworkMode(.generate)
+        #expect(await waitUntil { store.artwork != nil })
+    }
+
+    @Test("Export waits for a cover render that is still in flight")
+    func exportWaitsForCover() async throws {
+        let (vm, store, parent) = try ready(splitter: StubSplitter())
+        defer { try? FileManager.default.removeItem(at: parent) }
+        vm.refreshCover()      // debounced: still pending when Export is pressed
+        vm.export()
+        #expect(await waitUntil { if case .finished = store.exportState { true } else { false } })
+        #expect(store.artwork != nil, "the export ran with the freshly rendered cover")
     }
 }

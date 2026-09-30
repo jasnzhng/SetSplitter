@@ -12,6 +12,39 @@ enum AudioTestSupport {
             .appendingPathComponent("Fixtures/audio/\(name)")
     }
 
+    /// Writes a 440 Hz sine as a PCM WAV: 8/16/24-bit integer, or 32-bit float. Lets tests cover any rate, channel count
+    /// and bit depth without committing megabytes of fixtures.
+    static func writeWAV(
+        to url: URL, sampleRate: Int, channels: Int, bitsPerSample: Int, seconds: Int
+    ) throws {
+        let bytesPerSample = bitsPerSample / 8
+        let frames = sampleRate * seconds
+        let dataSize = frames * channels * bytesPerSample
+        var data = Data(capacity: 44 + dataSize)
+        func u32(_ v: Int) { withUnsafeBytes(of: UInt32(v).littleEndian) { data.append(contentsOf: $0) } }
+        func u16(_ v: Int) { withUnsafeBytes(of: UInt16(v).littleEndian) { data.append(contentsOf: $0) } }
+        data.append(contentsOf: Array("RIFF".utf8)); u32(36 + dataSize)
+        data.append(contentsOf: Array("WAVEfmt ".utf8)); u32(16)
+        u16(bitsPerSample == 32 ? 3 : 1)   // format 1 = integer PCM, 3 = IEEE float
+        u16(channels); u32(sampleRate); u32(sampleRate * channels * bytesPerSample)
+        u16(channels * bytesPerSample); u16(bitsPerSample)
+        data.append(contentsOf: Array("data".utf8)); u32(dataSize)
+        for frame in 0..<frames {
+            let x = 0.5 * sin(2 * .pi * 440 * Double(frame) / Double(sampleRate))
+            for _ in 0..<channels {
+                switch bitsPerSample {
+                case 8: data.append(UInt8(128 + Int(x * 127)))     // 8-bit WAV is unsigned
+                case 16: u16(Int(Int16(x * 32_767)) & 0xFFFF)
+                case 32: u32(Int(Float(x).bitPattern))
+                default:                                            // 24-bit little-endian, signed
+                    let v = Int(x * 8_388_607)
+                    data.append(contentsOf: [UInt8(v & 0xFF), UInt8((v >> 8) & 0xFF), UInt8((v >> 16) & 0xFF)])
+                }
+            }
+        }
+        try data.write(to: url)
+    }
+
     /// Decodes a file to interleaved float samples via AVAssetReader (which honours iTunSMPB trimming).
     static func decode(_ url: URL) async throws -> (samples: [Float], channels: Int) {
         let asset = AVURLAsset(url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])

@@ -35,7 +35,13 @@ final class ExportViewModel {
     private let preferences: any PreferencesStoring
     private let job: ExportJob
     private let artworkPreparer = ArtworkPreparer()
+    /// The same monospaced face `Theme.display` uses for headlines, so covers match the app.
+    private let coverGenerator = CoverArtGenerator(titleFont: { size in
+        NSFont.monospacedSystemFont(ofSize: size, weight: .heavy) as CTFont
+    })
     private var exportTask: Task<Void, Never>?
+    private var coverTask: Task<Void, Never>?
+    private var coverGeneration = 0
 
     init(store: SessionStore, picker: any FilePicking, preferences: any PreferencesStoring, job: ExportJob) {
         self.store = store
@@ -46,32 +52,116 @@ final class ExportViewModel {
 
     // MARK: Artwork
 
-    func browseForArtwork() async {
-        guard let url = await picker.chooseImage() else { return }
-        await loadArtwork(from: url)
+    /// Switches between the generator and the user's own image, making `store.artwork` match.
+    func setArtworkMode(_ mode: ArtworkMode) {
+        guard mode != store.artworkMode else { return }
+        store.artworkMode = mode
+        artworkError = nil
+        switch mode {
+        case .generate: refreshCover(debounced: false)
+        case .upload:
+            invalidateCoverRender()
+            store.artwork = store.uploadedArtwork
+        }
     }
 
-    /// Reads and prepares artwork off the main actor (a large image decode would
+    /// Chooses the file for whichever mode is active: the whole cover (Upload) or just the backdrop (Generate).
+    func browseForArtwork() async {
+        guard let url = await picker.chooseImage() else { return }
+        await useImage(from: url)
+    }
+
+    /// Reads and prepares an image off the main actor (a large image decode would
     /// otherwise beachball the window). Only local files are accepted: a drag from a
     /// browser can carry an http URL, and `Data(contentsOf:)` would fetch it synchronously.
-    func loadArtwork(from url: URL) async {
+    func useImage(from url: URL) async {
         guard url.isFileURL else {
             artworkError = "Drop an image file from Finder, not a web link."
             return
         }
         let access = SecurityScopedAccess(url: url)
-        await install { try Data(contentsOf: url) }
-        withExtendedLifetime(access) {}
+        defer { withExtendedLifetime(access) {} }
+        switch store.artworkMode {
+        case .upload:
+            await install { try Data(contentsOf: url) }
+        case .generate:
+            let preparer = artworkPreparer
+            let prepared = await Task.detached(priority: .userInitiated) { () -> Result<PreparedArtwork, Error> in
+                Result { try preparer.prepare(Data(contentsOf: url)) }
+            }.value
+            switch prepared {
+            case .success(let art):
+                store.cover.background = art.jpeg
+                store.cover.backgroundName = url.lastPathComponent
+                artworkError = nil
+                refreshCover(debounced: false)
+            case .failure(let error):
+                artworkError = (error as? LocalizedError)?.errorDescription ?? "That image couldn't be read."
+            }
+        }
     }
 
-    /// Makes a cover from the set itself (title, artist and the tracklist's shape). Deterministic:
-    /// the same set always produces the same cover.
-    func generateCover() async {
-        let title = store.albumTitle, artist = store.albumArtist, durations = store.durations
-        await install { try CoverArtGenerator().generate(title: title, artist: artist, trackDurations: durations) }
+    func removeArtwork() {
+        store.uploadedArtwork = nil
+        store.artwork = nil
+        artworkError = nil
     }
 
-    /// Runs `produce` → `ArtworkPreparer` → `CoverPalette` off the main actor and publishes the result.
+    // MARK: Generated cover
+
+    func removeBackground() {
+        store.cover.background = nil
+        store.cover.backgroundName = nil
+        store.cover.filter = .none
+        refreshCover(debounced: false)
+    }
+
+    func shuffleColors() {
+        let count = CoverScheme.all.count
+        store.cover.schemeIndex = (store.cover.schemeIndex + Int.random(in: 1..<count)) % count
+        refreshCover(debounced: false)
+    }
+
+    /// Re-renders the generated cover from the album title and design. Typing debounces so a burst of
+    /// keystrokes renders once; the latest request always wins. No-op outside Generate mode.
+    func refreshCover(debounced: Bool = true) {
+        guard store.artworkMode == .generate else { return }
+        coverGeneration += 1
+        let generation = coverGeneration
+        coverTask?.cancel()
+        let title = store.albumTitle, style = store.cover.style
+        let preparer = artworkPreparer, generator = coverGenerator
+        coverTask = Task {
+            if debounced {
+                try? await Task.sleep(for: .milliseconds(120))
+                guard !Task.isCancelled else { return }
+            }
+            let result = await Task.detached(priority: .userInitiated) { () -> Result<(PreparedArtwork, [SRGBColor]), Error> in
+                Result {
+                    let prepared = try preparer.prepare(generator.generate(title: title, style: style))
+                    return (prepared, CoverPalette().extract(from: prepared.jpeg))
+                }
+            }.value
+            // A newer request (or a switch to Upload) owns the result now.
+            guard generation == coverGeneration, store.artworkMode == .generate else { return }
+            coverTask = nil
+            switch result {
+            case .success(let (prepared, palette)):
+                store.artwork = Artwork(prepared: prepared, palette: palette)
+                artworkError = nil
+            case .failure(let error):
+                artworkError = (error as? LocalizedError)?.errorDescription ?? "The cover couldn't be generated."
+            }
+        }
+    }
+
+    private func invalidateCoverRender() {
+        coverGeneration += 1
+        coverTask?.cancel()
+        coverTask = nil
+    }
+
+    /// Runs `produce` → `ArtworkPreparer` → `CoverPalette` off the main actor and publishes the upload.
     private func install(_ produce: @escaping @Sendable () throws -> Data) async {
         let preparer = artworkPreparer
         let result = await Task.detached(priority: .userInitiated) { () -> Result<(PreparedArtwork, [SRGBColor]), Error> in
@@ -82,16 +172,13 @@ final class ExportViewModel {
         }.value
         switch result {
         case .success(let (prepared, palette)):
-            store.artwork = Artwork(prepared: prepared, palette: palette)
+            let art = Artwork(prepared: prepared, palette: palette)
+            store.uploadedArtwork = art
+            store.artwork = art
             artworkError = nil
         case .failure(let error):
             artworkError = (error as? LocalizedError)?.errorDescription ?? "That image couldn't be read."
         }
-    }
-
-    func removeArtwork() {
-        store.artwork = nil
-        artworkError = nil
     }
 
     // MARK: Folder
@@ -108,6 +195,12 @@ final class ExportViewModel {
 
     /// Primary action. Validates, then either asks about an existing folder or starts.
     func export() {
+        // A cover render still in flight (the user typed, then hit Export) must land first, or the
+        // files would be tagged with the previous title's art.
+        if let pending = coverTask {
+            Task { await pending.value; export() }
+            return
+        }
         showsValidation = true
         guard store.canExport, !store.exportState.isRunning else { return }
         store.existingFolderPolicy = .fail

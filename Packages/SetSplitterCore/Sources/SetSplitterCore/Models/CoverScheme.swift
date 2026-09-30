@@ -2,9 +2,8 @@
 //  CoverScheme.swift
 //  SetSplitterCore
 //
-//  The curated gradient pairs behind every generated cover, big (the album art)
-//  and small (each track's mini cover). A fixed list — not random hues — keeps
-//  everything the app makes looking like it came from one label.
+//  The curated gradient pairs behind every generated cover. A fixed list — not
+//  random hues — keeps everything the app makes looking like it came from one label.
 //
 
 import Foundation

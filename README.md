@@ -1,16 +1,16 @@
 # SetSplitter
 
-A local macOS app that splits one long DJ-set MP3 into a folder of individual,
+A local macOS app that splits one long DJ-set recording (MP3, M4A or WAV) into a folder of individual,
 gaplessly-playable `.m4a` (AAC 256) tracks with full metadata and shared album
 artwork — ready to drag into Apple Music as a single continuous album.
 
-Three-screen wizard: **Import** (drop the MP3) → **Tracklist** (paste text, tune
+Three-screen wizard: **Import** (drop the MP3, M4A or WAV) → **Tracklist** (paste text, tune
 parse options, preview and hand-fix tracks) → **Export** (artwork, album metadata,
 output folder, run).
 
 ## Using it
 
-1. **Import** — drop an MP3 on the window (or `⌘O`). The app reads its duration,
+1. **Import** — drop an MP3, M4A or WAV on the window (or `⌘O`). The app reads its duration,
    sample rate and channels to confirm it's a valid file.
 2. **Tracklist** — paste the tracklist in any layout (even one long line); the only
    requirement is timestamps like `0:00` or `1:02:03`. Cards preview each track live.

@@ -21,14 +21,26 @@ struct ImportViewModelTests {
         #expect(vm.phase == .idle)
     }
 
-    @Test("non-mp3 files are rejected with a message")
-    func rejectsWrongType() async {
+    @Test("m4a and wav load like mp3", arguments: ["Live_Set.m4a", "Live_Set.wav", "Live_Set.WAV"])
+    func loadsOtherFormats(_ filename: String) async {
         let store = Fixtures.store(withSource: false)
         let vm = model(store: store)
-        await vm.load(URL(fileURLWithPath: "/tmp/song.wav"))
+        await vm.load(URL(fileURLWithPath: "/tmp/\(filename)"))
+        #expect(store.source?.filename == filename)
+        #expect(store.albumTitle == "Live Set")
+        #expect(vm.phase == .idle)
+    }
+
+    @Test("unsupported files are rejected with a message naming the file and the accepted formats",
+          arguments: ["song.ogg", "notes.txt", "no-extension"])
+    func rejectsWrongType(_ filename: String) async {
+        let store = Fixtures.store(withSource: false)
+        let vm = model(store: store)
+        await vm.load(URL(fileURLWithPath: "/tmp/\(filename)"))
         #expect(store.source == nil)
         guard case .failed(let message) = vm.phase else { Issue.record("expected failure"); return }
-        #expect(message.contains("song.wav"))
+        #expect(message.contains(filename))
+        #expect(message.contains("MP3, M4A or WAV"))
     }
 
     @Test("dropping several files is rejected")

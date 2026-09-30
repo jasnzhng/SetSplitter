@@ -50,6 +50,12 @@ struct ExportStage: View {
     /// Left edge of the right-hand column (clear of the tonearm's reach).
     private let columnX: CGFloat = 340
     private let columnWidth: CGFloat = 400
+    /// Width of the working text (percentage, track, title, Cancel), narrower than the column
+    /// so the finished summary has room to breathe.
+    private let workingWidth: CGFloat = 300
+    /// While working, the whole scene shifts right by this much so record + text are centred as one
+    /// group; it eases back to 0 as the finale settles into the finished layout.
+    private var workingInset: CGFloat { (columnWidth - workingWidth) / 2 }
     private var stageWidth: CGFloat { columnX + columnWidth }
 
     /// How much of the record still shows past the sleeve's open (left) edge when it has slid in:
@@ -80,6 +86,7 @@ struct ExportStage: View {
                 if let result { summaryColumn(result) }
             }
             .frame(width: stageWidth, height: sleeveSize, alignment: .topLeading)
+            .offset(x: finale.settled ? 0 : workingInset)
 
             timeline
         }
@@ -135,7 +142,7 @@ struct ExportStage: View {
                 .foregroundStyle(.tertiary)
                 .lineLimit(2)
                 .truncationMode(.middle)
-                .frame(maxWidth: 300, alignment: .leading)
+                .frame(maxWidth: workingWidth, alignment: .leading)
                 .animation(Theme.quick, value: progress.currentTitle)
                 .accessibilityHidden(true)
             Button("Cancel", role: .cancel, action: model.cancel)
@@ -145,7 +152,7 @@ struct ExportStage: View {
                 .padding(.top, 8)
                 .disabled(isFinished)
         }
-        .frame(width: columnWidth, height: sleeveSize, alignment: .leading)
+        .frame(width: workingWidth, height: sleeveSize, alignment: .leading)
         .offset(x: columnX)
         .opacity(finale.progressGone ? 0 : 1)
         .blur(radius: finale.progressGone ? 6 : 0)

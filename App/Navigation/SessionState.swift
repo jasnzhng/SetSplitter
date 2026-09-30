@@ -38,6 +38,37 @@ struct Artwork {
     }
 }
 
+/// Where the album art comes from.
+enum ArtworkMode: Hashable {
+    /// Made from the album title over a gradient or a background photo.
+    case generate
+    /// The user's own image, used as-is (or none at all).
+    case upload
+}
+
+/// The Generate mode's settings. The title comes from the album field, so typing there re-renders live.
+struct CoverDesign: Equatable {
+    /// Which gradient; a random one to start, and "Shuffle" picks another.
+    var schemeIndex = Int.random(in: 0..<CoverScheme.all.count)
+    /// The chosen background photo, already prepared (square JPEG ≤ 1400 px). `nil` = use the gradient.
+    var background: Data?
+    var backgroundName: String?
+    var filter: CoverStyle.Filter = .none
+
+    var style: CoverStyle { CoverStyle(schemeIndex: schemeIndex, background: background, filter: filter) }
+}
+
+extension CoverStyle.Filter {
+    var displayName: String {
+        switch self {
+        case .none: "None"
+        case .darken: "Darken"
+        case .greyscale: "Greyscale"
+        case .duotone: "Duotone"
+        }
+    }
+}
+
 /// Where the album folder will be created.
 struct OutputFolder {
     let url: URL

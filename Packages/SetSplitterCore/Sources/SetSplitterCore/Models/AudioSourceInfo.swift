@@ -14,7 +14,12 @@ public struct AudioSourceInfo: Hashable, Sendable {
     /// Duration in seconds, measured with precise timing (VBR-safe).
     public var duration: Double
 
+    /// The rate the export decodes and encodes at. Equals the file's own rate unless AAC can't
+    /// encode it (e.g. 96 kHz WAV), in which case this is the rate the file is resampled to.
     public var sampleRate: Double
+
+    /// The file's own sample rate when it differs from `sampleRate`; `nil` when not resampled.
+    public var originalSampleRate: Double?
 
     public var channels: Int
 
@@ -27,12 +32,14 @@ public struct AudioSourceInfo: Hashable, Sendable {
     public init(
         duration: Double,
         sampleRate: Double,
+        originalSampleRate: Double? = nil,
         channels: Int,
         codecName: String = "Audio",
         bitrateKbps: Int? = nil
     ) {
         self.duration = duration
         self.sampleRate = sampleRate
+        self.originalSampleRate = originalSampleRate
         self.channels = channels
         self.codecName = codecName
         self.bitrateKbps = bitrateKbps
@@ -45,11 +52,15 @@ public struct AudioSourceInfo: Hashable, Sendable {
         Int64((duration * sampleRate).rounded())
     }
 
-    /// One-line summary for the Import screen, e.g. `"MP3 · 44.1 kHz · Stereo"`.
+    /// One-line summary for the Import screen, e.g. `"MP3 · 44.1 kHz · Stereo"`, or
+    /// `"WAV · 96 kHz → 48 kHz · Stereo"` when the export will resample.
     public var summary: String {
-        let rate = sampleRate.truncatingRemainder(dividingBy: 1000) == 0
-            ? String(format: "%.0f kHz", sampleRate / 1000)
-            : String(format: "%.1f kHz", sampleRate / 1000)
+        func kHz(_ hz: Double) -> String {
+            hz.truncatingRemainder(dividingBy: 1000) == 0
+                ? String(format: "%.0f kHz", hz / 1000)
+                : String(format: "%.1f kHz", hz / 1000)
+        }
+        let rate = originalSampleRate.map { "\(kHz($0)) → \(kHz(sampleRate))" } ?? kHz(sampleRate)
         let layout: String
         switch channels {
         case 1: layout = "Mono"

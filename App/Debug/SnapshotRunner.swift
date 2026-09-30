@@ -88,6 +88,7 @@ enum SnapshotRunner {
         case exportFailed = "10-export-failed"
         case turntableGallery = "11-turntable-gallery"
         case finaleGallery = "12-finale-gallery"
+        case exportFormPhoto = "13-export-form-photo"
 
         @MainActor
         func seed(_ model: AppModel) {
@@ -120,13 +121,19 @@ enum SnapshotRunner {
                 if self == .tracklistEdited, let t = store.parseResult.tracks.dropFirst(2).first {
                     store.edits.setTitle("Focus (ALOK Remix) [edited]", at: t.start)
                 }
-            case .exportForm, .exportInvalid, .exportRunning, .exportDone, .exportFailed:
+            case .exportForm, .exportFormPhoto, .exportInvalid, .exportRunning, .exportDone, .exportFailed:
                 store.step = .export
                 store.tracklistText = sample
                 store.reparse()
                 if self != .exportInvalid {
                     store.albumArtist = "Various Artists"
-                    store.artwork = SampleArtwork.make()
+                    store.cover.schemeIndex = 0
+                    if self == .exportFormPhoto, let photo = SampleArtwork.photo() {
+                        store.cover.background = photo
+                        store.cover.backgroundName = "IMG_2041.jpg"
+                        store.cover.filter = .duotone
+                    }
+                    store.artwork = SampleArtwork.make(title: store.albumTitle, style: store.cover.style)
                     store.outputFolder = OutputFolder(url: URL(fileURLWithPath: "/Users/dj/Music"), access: nil)
                 } else {
                     model.exportViewModel.markValidationShown()
@@ -156,7 +163,7 @@ private struct TurntableGallery: View {
             HStack(alignment: .top, spacing: 8) {
                 labelled("idle", Turntable(state: .idle, radius: 96, palette: palette))
                 labelled("targeted", Turntable(state: .targeted, radius: 96, palette: palette))
-                labelled("loaded", Turntable(state: .loaded, radius: 96, palette: palette, labelText: "2:00:00"))
+                labelled("loaded", Turntable(state: .loaded, radius: 96, palette: palette))
             }
             HStack(alignment: .top, spacing: 8) {
                 labelled("export 0%", Turntable(state: .exporting(progress: 0), radius: 96, palette: palette, trackGaps: [0.2, 0.45, 0.7]))
@@ -210,30 +217,32 @@ private struct FinaleGallery: View {
     }
 }
 
-/// A synthetic cover: layered gradients, so the preview shows something realistic.
+/// Stand-ins for a generated cover and for a user's photo, so the form shows something realistic.
 private enum SampleArtwork {
-    @MainActor static func make() -> Artwork? {
-        let n = 800
-        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
-              let ctx = CGContext(data: nil, width: n, height: n, bitsPerComponent: 8, bytesPerRow: 0, space: space,
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        let top = CGColor(red: 0.98, green: 0.36, blue: 0.22, alpha: 1)
-        let bottom = CGColor(red: 0.16, green: 0.10, blue: 0.32, alpha: 1)
-        guard let gradient = CGGradient(colorsSpace: space, colors: [top, bottom] as CFArray, locations: [0, 1]) else { return nil }
-        ctx.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: n, y: n), options: [])
-        ctx.setFillColor(CGColor(gray: 1, alpha: 0.9))
-        for i in 0..<28 {
-            let height = CGFloat(60 + (i * 47) % 300)
-            let x = CGFloat(90 + i * 22)
-            let y = CGFloat(n) / 2 - height / 2
-            ctx.fill(CGRect(x: x, y: y, width: 12, height: height))
-        }
-        guard let image = ctx.makeImage() else { return nil }
-        let rep = NSBitmapImageRep(cgImage: image)
-        guard let png = rep.representation(using: .png, properties: [:]),
+    @MainActor static func make(title: String, style: CoverStyle) -> Artwork? {
+        guard let png = try? CoverArtGenerator(titleFont: { NSFont.monospacedSystemFont(ofSize: $0, weight: .heavy) as CTFont }).generate(title: title, style: style),
               let prepared = try? ArtworkPreparer().prepare(png) else { return nil }
         return Artwork(prepared: prepared, palette: CoverPalette().extract(from: prepared.jpeg))
+    }
+
+    /// A busy, photo-like PNG (sky, sun, hills) for the background-photo scenario.
+    static func photo() -> Data? {
+        let w = 1200, h = 900
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
+              let sky = CGGradient(colorsSpace: space, colors: [CGColor(red: 0.98, green: 0.80, blue: 0.45, alpha: 1),
+                                                                 CGColor(red: 0.25, green: 0.50, blue: 0.85, alpha: 1)] as CFArray, locations: [0, 1])
+        else { return nil }
+        ctx.drawLinearGradient(sky, start: CGPoint(x: 0, y: 0), end: CGPoint(x: 0, y: h), options: [])
+        ctx.setFillColor(CGColor(red: 1, green: 0.97, blue: 0.85, alpha: 1))
+        ctx.fillEllipse(in: CGRect(x: 760, y: 470, width: 200, height: 200))
+        for (i, tone) in [(0.16, 0.22, 0.14), (0.10, 0.30, 0.18), (0.05, 0.14, 0.10)].enumerated() {
+            ctx.setFillColor(CGColor(red: tone.0, green: tone.1, blue: tone.2, alpha: 1))
+            ctx.fillEllipse(in: CGRect(x: -200 + i * 380, y: -420 + i * 90, width: 1100, height: 700))
+        }
+        guard let image = ctx.makeImage() else { return nil }
+        return NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])
     }
 }
 

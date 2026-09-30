@@ -74,7 +74,12 @@ final class SessionStore {
     }
     var comment = ""
     var isCompilation = false
+    /// The artwork that will be embedded: whichever of the generated cover or the upload is active.
     var artwork: Artwork?
+    var artworkMode: ArtworkMode = .generate
+    var cover = CoverDesign()
+    /// Kept while the user flips to Generate and back, so switching modes never loses their image.
+    var uploadedArtwork: Artwork?
 
     // MARK: Export
 
@@ -218,6 +223,9 @@ final class SessionStore {
         comment = ""
         isCompilation = false
         artwork = nil
+        uploadedArtwork = nil
+        artworkMode = .generate
+        cover = CoverDesign()
         existingFolderPolicy = .fail
         exportState = .idle
         step = .importFile

@@ -28,7 +28,9 @@ struct Tonearm: View {
     private static let pivot = CGPoint(x: 1.22, y: -0.62)
     private static let armLength = 1.0
     private static let outerGroove = 0.94
-    private static let innerGroove = 0.36   // just outside the label
+    // The headshell extends ~0.13 r past the needle, and the label is 0.28 r wide, so the needle
+    // must stop far enough out that the *headshell* still clears the label.
+    private static let innerGroove = 0.50
 
     /// The arm angle (degrees, y-down, so increasing = clockwise) that puts the needle at `grooveRadius`.
     private static func angle(forGroove grooveRadius: Double) -> Double {
