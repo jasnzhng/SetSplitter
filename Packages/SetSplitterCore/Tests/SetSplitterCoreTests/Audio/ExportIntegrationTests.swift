@@ -144,6 +144,8 @@ struct ExportIntegrationTests {
         // Cancel from inside the progress callback once track 2 is being written, so a writer is
         // open and track 1 is already finished — the cleanup path §7.7 is about.
         let trigger = CancelTrigger()
+        // `trigger.task` is set before the export can reach track 2 (it needs >10 s of audio to
+        // be decoded first), and `fire()` is a no-op until then, so there is no lost-cancel race.
         let task = Task {
             try await ExportJob().run(req) { p in
                 if p.currentTrack >= 2, p.framesProcessed > 0 { trigger.fire() }
@@ -153,6 +155,23 @@ struct ExportIntegrationTests {
         await #expect(throws: CancellationError.self) { _ = try await task.value }
         #expect(trigger.fired, "the export finished before the cancel could land")
         #expect(try FileManager.default.contentsOfDirectory(atPath: parent.path).isEmpty)
+    }
+
+    @Test("an old abandoned temp folder is swept; a fresh one is left alone")
+    func sweepsStaleTempFolders() async throws {
+        let parent = try AudioTestSupport.makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: parent) }
+        let fm = FileManager.default
+        let stale = parent.appendingPathComponent(".SetSplitter-stale")
+        let fresh = parent.appendingPathComponent(".SetSplitter-fresh")
+        try fm.createDirectory(at: stale, withIntermediateDirectories: true)
+        try fm.createDirectory(at: fresh, withIntermediateDirectories: true)
+        try fm.setAttributes([.modificationDate: Date().addingTimeInterval(-3 * 86_400)], ofItemAtPath: stale.path)
+
+        let info = try await AVFoundationAudioInspector().inspect(url: source)
+        _ = try await ExportJob().run(request(parent: parent, info: info, starts: [0, 10]))
+        #expect(!fm.fileExists(atPath: stale.path))
+        #expect(fm.fileExists(atPath: fresh.path))
     }
 
     @Test("empty tracklist exports one track named after the album")
@@ -188,8 +207,8 @@ private final class CancelTrigger: @unchecked Sendable {
 private final class ProgressLog: @unchecked Sendable {
     private let lock = NSLock()
     private var events: [ExportProgress] = []
-    func add(_ e: ExportProgress) { lock.lock(); events.append(e); lock.unlock() }
-    var all: [ExportProgress] { lock.lock(); defer { lock.unlock() }; return events }
+    func add(_ e: ExportProgress) { lock.withLock { events.append(e) } }
+    var all: [ExportProgress] { lock.withLock { events } }
 }
 
 extension Sequence {

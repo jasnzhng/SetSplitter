@@ -51,22 +51,27 @@ final class ExportViewModel {
         await loadArtwork(from: url)
     }
 
+    /// Reads and prepares artwork off the main actor (a large image decode would
+    /// otherwise beachball the window). Only local files are accepted: a drag from a
+    /// browser can carry an http URL, and `Data(contentsOf:)` would fetch it synchronously.
     func loadArtwork(from url: URL) async {
+        guard url.isFileURL else {
+            artworkError = "Drop an image file from Finder, not a web link."
+            return
+        }
         let access = SecurityScopedAccess(url: url)
-        defer { _ = access }
-        do {
-            let data = try Data(contentsOf: url)
-            try applyArtwork(data)
-        } catch {
+        let preparer = artworkPreparer
+        let result = await Task.detached(priority: .userInitiated) { () -> Result<PreparedArtwork, Error> in
+            Result { try preparer.prepare(Data(contentsOf: url)) }
+        }.value
+        withExtendedLifetime(access) {}
+        switch result {
+        case .success(let prepared):
+            store.artwork = Artwork(jpeg: prepared.jpeg, pixelSize: prepared.pixelSize, notices: prepared.notices)
+            artworkError = nil
+        case .failure(let error):
             artworkError = (error as? LocalizedError)?.errorDescription ?? "That image couldn't be read."
         }
-    }
-
-    /// Accepts raw image bytes (drag from a browser, paste, …).
-    func applyArtwork(_ data: Data) throws {
-        let prepared = try artworkPreparer.prepare(data)
-        store.artwork = Artwork(jpeg: prepared.jpeg, pixelSize: prepared.pixelSize, notices: prepared.notices)
-        artworkError = nil
     }
 
     func removeArtwork() {

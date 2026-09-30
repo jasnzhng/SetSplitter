@@ -59,8 +59,11 @@ struct UserDefaultsPreferences: PreferencesStoring {
         guard let url = try? URL(
             resolvingBookmarkData: data, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &stale)
         else { return nil }
+        let access = SecurityScopedAccess(url: url)
+        // Refreshing a stale bookmark needs the security scope to be active, so it
+        // must happen after `access` starts, not before.
         if stale { saveOutputFolder(url) }
-        return SecurityScopedAccess(url: url)
+        return access
     }
 
     func saveOutputFolder(_ url: URL) {

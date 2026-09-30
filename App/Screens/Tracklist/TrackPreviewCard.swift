@@ -63,8 +63,7 @@ struct TrackPreviewCard: View {
             }
             Text("Starts at \(track.start.displayString)")
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Track \(track.index): \(track.title) by \(track.artist.isEmpty ? "unknown artist" : track.artist), \(TrackTiming.format(duration))")
+        .accessibilityElement(children: .contain)   // keep the inline editors individually reachable
     }
 
     /// Stand-in for cover art: a tile carrying the track number, with a small

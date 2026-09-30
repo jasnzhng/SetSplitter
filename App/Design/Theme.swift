@@ -14,8 +14,8 @@ enum Theme {
     static let cardRadius: CGFloat = 12
     static let rowRadius: CGFloat = 9
 
-    /// The spring used for every state change so motion feels like one system.
-    static let spring = Animation.smooth(duration: 0.38)
+    /// The curve used for every larger state change so motion feels like one system.
+    static let smooth = Animation.smooth(duration: 0.38)
     static let quick = Animation.snappy(duration: 0.22)
 }
 
@@ -31,19 +31,5 @@ extension View {
             RoundedRectangle(cornerRadius: radius, style: .continuous)
                 .strokeBorder(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.5)
         )
-    }
-}
-
-/// Small uppercase section label used above cards.
-struct SectionLabel: View {
-    let text: String
-    init(_ text: String) { self.text = text }
-
-    var body: some View {
-        Text(text)
-            .font(.caption.weight(.semibold))
-            .textCase(.uppercase)
-            .tracking(0.6)
-            .foregroundStyle(.secondary)
     }
 }

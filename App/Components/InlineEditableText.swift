@@ -38,21 +38,23 @@ struct InlineEditableText: View {
                     .background(RoundedRectangle(cornerRadius: 5).fill(Color(nsColor: .textBackgroundColor)))
                     .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.accentColor, lineWidth: 1.5))
             } else {
-                Text(text.isEmpty ? placeholder : text)
-                    .font(font)
-                    .foregroundStyle(text.isEmpty ? Color.secondary.opacity(0.7) : color)
-                    .italic(text.isEmpty)
-                    .lineLimit(1)
-                    .truncationMode(.middle)   // long mashup credits keep both ends visible
-                    .padding(.horizontal, 5).padding(.vertical, 1)
-                    .background(
-                        RoundedRectangle(cornerRadius: 5)
-                            .fill(Color.primary.opacity(isHovering ? 0.07 : 0)))
-                    .onHover { isHovering = $0 }
-                    .onTapGesture(perform: beginEditing)
-                    .help("Click to edit")
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityHint("Edits this field")
+                Button(action: beginEditing) {
+                    Text(text.isEmpty ? placeholder : text)
+                        .font(font)
+                        .foregroundStyle(text.isEmpty ? Color.secondary.opacity(0.7) : color)
+                        .italic(text.isEmpty)
+                        .lineLimit(1)
+                        .truncationMode(.middle)   // long mashup credits keep both ends visible
+                        .padding(.horizontal, 5).padding(.vertical, 1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(Color.primary.opacity(isHovering ? 0.07 : 0)))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .onHover { isHovering = $0 }
+                .help("Click to edit")
+                .accessibilityHint("Edits this field")
             }
         }
         .padding(.horizontal, -5)   // keep text aligned with siblings despite the edit padding

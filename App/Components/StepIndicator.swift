@@ -25,6 +25,7 @@ struct StepIndicator: View {
         }
         .padding(3)
         .background(Capsule().fill(Color(nsColor: .quaternarySystemFill)))
+        .animation(Theme.smooth, value: current)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Progress")
     }

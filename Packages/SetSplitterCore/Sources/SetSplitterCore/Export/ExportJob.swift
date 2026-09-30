@@ -49,6 +49,8 @@ public struct ExportJob: Sendable {
             throw ExportError.destinationExists(final)
         }
 
+        Self.sweepAbandonedTempFolders(in: settings.outputDirectory)
+
         // Hidden sibling inside the chosen parent: same volume (so the final move is a
         // rename, not a copy) and inside the sandbox grant.
         let temp = settings.outputDirectory.appendingPathComponent(".SetSplitter-\(UUID().uuidString)", isDirectory: true)
@@ -112,5 +114,19 @@ public struct ExportJob: Sendable {
         let visible = final.deletingLastPathComponent()
             .appendingPathComponent("\(final.lastPathComponent) (replaced)", isDirectory: true)
         try? fm.moveItem(at: url, to: visible)
+    }
+
+    /// A crash or force-quit mid-export leaves a hidden `.SetSplitter-<uuid>` folder full of
+    /// partial audio behind. Remove any that are over a day old (never one that may belong
+    /// to an export running right now).
+    private static func sweepAbandonedTempFolders(in directory: URL) {
+        let fm = FileManager.default
+        guard let entries = try? fm.contentsOfDirectory(
+            at: directory, includingPropertiesForKeys: [.contentModificationDateKey], options: []) else { return }
+        let cutoff = Date().addingTimeInterval(-24 * 3600)
+        for url in entries where url.lastPathComponent.hasPrefix(".SetSplitter-") {
+            let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+            if let modified, modified < cutoff { try? fm.removeItem(at: url) }
+        }
     }
 }

@@ -9,7 +9,7 @@
 
 import Foundation
 
-final class SecurityScopedAccess: @unchecked Sendable {   // immutable after init
+final class SecurityScopedAccess: Sendable {
 
     let url: URL
     private let didStart: Bool

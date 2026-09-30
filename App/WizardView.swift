@@ -29,12 +29,10 @@ struct WizardView: View {
     // MARK: Header
 
     private var header: some View {
-        ZStack {
-            StepIndicator(
-                current: store.step,
-                canJump: { $0 < store.step && !store.exportState.isRunning },
-                onSelect: { step in withAnimation(Theme.spring) { store.go(to: step) } })
-        }
+        StepIndicator(
+            current: store.step,
+            canJump: { $0 < store.step && !store.exportState.isRunning },
+            onSelect: { store.go(to: $0) })
         .frame(maxWidth: .infinity)
         .frame(height: 52)
         .background(alignment: .bottom) { Divider().opacity(0.6) }
@@ -66,31 +64,26 @@ struct WizardView: View {
             .blur(radius: isCurrent ? 0 : 6)
             .allowsHitTesting(isCurrent)
             .accessibilityHidden(!isCurrent)
-            .animation(Theme.spring, value: store.step)
+            .animation(Theme.smooth, value: store.step)
     }
 
     // MARK: Footer
 
     private var footer: some View {
+        // ⌘[ and ⌘⏎ are declared once, on the menu items in `WizardCommands`.
         HStack {
             if actions.canGoBack {
-                Button {
-                    withAnimation(Theme.spring) { actions.back() }
-                } label: {
+                Button(action: actions.back) {
                     Label("Back", systemImage: "chevron.left")
                 }
-                .keyboardShortcut("[")
                 .transition(.opacity)
             }
             Spacer()
             if actions.showsPrimary {
-                Button {
-                    withAnimation(Theme.spring) { actions.primary() }
-                } label: {
+                Button(action: actions.primary) {
                     Text(actions.primaryTitle).frame(minWidth: 84)
                 }
                 .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.return, modifiers: .command)
                 .disabled(!actions.primaryEnabled)
                 .transition(.opacity)
             }

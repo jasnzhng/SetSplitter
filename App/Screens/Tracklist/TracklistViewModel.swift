@@ -18,7 +18,7 @@ final class TracklistViewModel {
 
     /// The track whose card the pointer is over; the timeline strip mirrors it
     /// and vice versa.
-    var highlightedTrackID: UUID?
+    var highlightedStart: Timestamp?
 
     init(store: SessionStore) {
         self.store = store
@@ -40,6 +40,7 @@ final class TracklistViewModel {
 
     func pasteFromClipboard() {
         guard let text = NSPasteboard.general.string(forType: .string) else { return }
+        store.edits.resetAll()   // edits are keyed by timestamp; they don't belong to a different list
         store.tracklistText = text
     }
 

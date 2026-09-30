@@ -28,9 +28,9 @@ struct ExportScreen: View {
                 ExportFailedPanel(message: message, onRetry: model.editSettings).transition(Self.swap)
             }
         }
-        .animation(Theme.spring, value: stateKey)
+        .animation(Theme.smooth, value: stateKey)
         .confirmationDialog(
-            "“\(store.folderName)” already exists",
+            "“\(existingFolderName)” already exists",
             isPresented: Bindable(model).isAskingAboutExistingFolder,
             titleVisibility: .visible
         ) {
@@ -47,6 +47,11 @@ struct ExportScreen: View {
     private static let swap = AnyTransition.asymmetric(
         insertion: .opacity.combined(with: .scale(scale: 0.98)).animation(.smooth(duration: 0.35).delay(0.12)),
         removal: .opacity.animation(.easeOut(duration: 0.12)))
+
+    /// The folder name as it will appear on disk (sanitised), not the raw form text.
+    private var existingFolderName: String {
+        store.exportRequest.map { ExportJob.destination(for: $0.settings).lastPathComponent } ?? store.folderName
+    }
 
     /// Distinguishes the four export states for animation without making
     /// `ExportProgress` updates (10×/s) retrigger the transition.

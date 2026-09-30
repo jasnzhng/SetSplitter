@@ -8,7 +8,7 @@ CONFIG       := Debug
 CORE_PKG     := Packages/SetSplitterCore
 DERIVED_DATA := .build/DerivedData
 
-.PHONY: gen build build-signed test run snapshots clean
+.PHONY: gen build build-signed test test-app run snapshots clean
 
 gen:
 	xcodegen generate
@@ -20,6 +20,12 @@ build: gen
 
 test:
 	cd $(CORE_PKG) && swift test
+
+# App-layer tests (SessionStore, view models). Signed ad hoc so the sandboxed host app can load the test bundle.
+test-app: gen
+	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES test
 
 # Ad-hoc *signed* build: unlike `build`, the entitlements apply, so the App
 # Sandbox is really on. Use this (not `build`) when checking file access.

@@ -15,6 +15,14 @@ public struct ExportSettings: Hashable, Sendable {
     public enum Codec: Hashable, Sendable {
         case aac(bitrateKbps: Int)
         case alac
+
+        /// Short label for the UI, e.g. `"AAC 256 kbps"`.
+        public var displayName: String {
+            switch self {
+            case .aac(let kbps): "AAC \(kbps) kbps"
+            case .alac: "Apple Lossless"
+            }
+        }
     }
 
     /// What to do when `outputDirectory/folderName` already exists.

@@ -34,15 +34,15 @@ struct ExportForm: View {
 
     /// One line of what is about to happen.
     private var summary: some View {
-        let count = max(1, store.tracks.count)
+        let count = store.exportPlan?.tracks.count ?? 1
         return HStack(spacing: 6) {
             Image(systemName: "waveform.badge.checkmark")
-            Text("\(count) \(count == 1 ? "track" : "tracks") · AAC 256 kbps · gapless")
+            Text("\(count) \(count == 1 ? "track" : "tracks") · \(ExportSettings.Codec.aac(bitrateKbps: 256).displayName) · gapless")
                 .contentTransition(.numericText())
         }
         .font(.callout)
         .foregroundStyle(.secondary)
-        .help("AAC 256 kbps plays gaplessly in Music. With iCloud Music Library on, Apple re-encodes uploads to AAC 256 anyway.")
+        .help("AAC plays gaplessly in Music. With iCloud Music Library on, Apple re-encodes uploads to AAC 256 anyway.")
         .padding(.horizontal, 4)
     }
 }

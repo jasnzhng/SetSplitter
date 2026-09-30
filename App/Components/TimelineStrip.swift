@@ -10,17 +10,19 @@
 //
 
 import SwiftUI
+import SetSplitterCore
 
 struct TimelineStrip: View {
 
     /// Length of each track in seconds.
     let durations: [Double]
-    let ids: [UUID]
+    /// One stable id per segment (the track's start time), aligned with `durations`.
+    let ids: [Timestamp]
 
     /// Overall 0…1 progress. `nil` shows the strip in its resting (preview) state.
     var progress: Double?
 
-    @Binding var highlightedID: UUID?
+    @Binding var highlightedID: Timestamp?
 
     var height: CGFloat = 10
     private let gap: CGFloat = 2
@@ -37,7 +39,7 @@ struct TimelineStrip: View {
             }
         }
         .frame(height: height)
-        .animation(Theme.spring, value: durations)
+        .animation(Theme.smooth, value: durations)
         .accessibilityHidden(true)
     }
 

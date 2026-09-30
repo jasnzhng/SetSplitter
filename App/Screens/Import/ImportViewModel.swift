@@ -21,6 +21,7 @@ final class ImportViewModel {
     }
 
     private(set) var phase: Phase = .idle
+    private var loadSequence = 0
 
     private let store: SessionStore
     private let inspector: any AudioInspecting
@@ -53,19 +54,24 @@ final class ImportViewModel {
             phase = .failed("“\(url.lastPathComponent)” isn't an \(SupportedAudio.displayName) file.")
             return
         }
+        // Only the most recent load may publish: two quick drops can finish out of order.
+        loadSequence += 1
+        let ticket = loadSequence
         phase = .loading(filename: url.lastPathComponent)
         // Hold sandbox access from now until the export ends.
         let access = SecurityScopedAccess(url: url)
         do {
             let info = try await inspector.inspect(url: url)
-            let isNewFile = store.source?.url != url
-            store.source = SourceFile(url: url, info: info, access: access)
-            if isNewFile, store.albumTitle.isEmpty {
-                store.albumTitle = AlbumNameGuesser.guess(fromFilename: url.lastPathComponent)
+            guard ticket == loadSequence else { return }
+            if store.source?.url != url {
+                store.edits.resetAll()   // edits belong to the previous file's tracklist
             }
+            store.source = SourceFile(url: url, info: info, access: access)
+            store.guessAlbumTitle(fromFilename: url.lastPathComponent)
             store.exportState = .idle
             phase = .idle
         } catch {
+            guard ticket == loadSequence else { return }
             phase = .failed(error.localizedDescription)
         }
     }

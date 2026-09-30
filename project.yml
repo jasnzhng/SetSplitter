@@ -43,6 +43,19 @@ targets:
       - package: SetSplitterCore
         product: SetSplitterCore
 
+  SetSplitterTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: AppTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jasonzhang.SetSplitterTests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: "-"
+    dependencies:
+      - target: SetSplitter
+
 schemes:
   SetSplitter:
     build:
@@ -52,3 +65,5 @@ schemes:
       config: Debug
     test:
       config: Debug
+      targets:
+        - SetSplitterTests

@@ -23,25 +23,26 @@ struct ArtworkPicker: View {
                 if let art = store.artwork, let image = NSImage(data: art.jpeg) {
                     Image(nsImage: image)
                         .resizable()
+                        .accessibilityLabel("Album artwork")
                         .aspectRatio(1, contentMode: .fill)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
                         .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 } else {
-                    placeholder
+                    Button { Task { await model.browseForArtwork() } } label: { placeholder }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Album artwork, empty. Choose an image.")
                         .transition(.opacity)
                 }
             }
             .aspectRatio(1, contentMode: .fit)
-            .animation(Theme.spring, value: store.artwork?.jpeg.count)
+            .animation(Theme.smooth, value: store.artwork?.jpeg.count)
             .dropDestination(for: URL.self) { urls, _ in
                 guard let url = urls.first else { return false }
                 Task { await model.loadArtwork(from: url) }
                 return true
             } isTargeted: { isTargeted = $0 }
-            .onTapGesture { if store.artwork == nil { Task { await model.browseForArtwork() } } }
-            .accessibilityLabel(store.artwork == nil ? "Album artwork, empty. Choose an image." : "Album artwork")
-            .accessibilityAddTraits(.isButton)
+            .accessibilityElement(children: .contain)
 
             if let art = store.artwork {
                 HStack {
@@ -91,7 +92,7 @@ struct ArtworkPicker: View {
                 }
             }
             .scaleEffect(isTargeted ? 1.02 : 1)
-            .animation(Theme.spring, value: isTargeted)
+            .animation(Theme.smooth, value: isTargeted)
     }
 
     @ViewBuilder

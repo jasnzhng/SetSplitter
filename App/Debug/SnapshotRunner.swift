@@ -26,11 +26,12 @@ enum SnapshotRunner {
     }
 
     static func run(into directory: URL) async {
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        do { try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true) } catch {
+            print("snapshot: can't create \(directory.path): \(error)"); NSApp.terminate(nil); return
+        }
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
             for scenario in Scenario.allCases {
-                let model = AppModel()
-                model.store.parseOptions = .default
+                let model = AppModel(preferences: InMemoryPreferences())   // never touch the developer's real defaults
                 scenario.seed(model)
                 let window = makeWindow(model: model, appearance: appearance)
                 await settle()
@@ -62,7 +63,8 @@ enum SnapshotRunner {
     private static func write(_ window: NSWindow, to url: URL) {
         guard let view = window.contentView, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
         view.cacheDisplay(in: view.bounds, to: rep)
-        if let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: url) }
+        guard let png = rep.representation(using: .png, properties: [:]) else { return }
+        do { try png.write(to: url) } catch { print("snapshot: couldn't write \(url.lastPathComponent): \(error)") }
     }
 
     // MARK: Scenarios
@@ -82,7 +84,16 @@ enum SnapshotRunner {
         @MainActor
         func seed(_ model: AppModel) {
             let store = model.store
-            let sample = "01. [0:00](https://www.youtube.com/watch?v=x) | Belocca - Ifuna (Intro Edit) 02. [02:36](https://y.be/x&t=156s) | Dom Dolla ft. Daya - Dreamin (Eli Brown Remix) 03. [04:44](https://y.be) | John Summit ft. CLOVES - Focus (ALOK Remix) 04. [07:35](https://y.be) | A$AP Rocky - Lord Pretty Flacko Jodye 2 (LPFJ2) (HNTR Edit) 05. [10:06](https://y.be) | Vintage Culture - ID W/ | Dom Dolla - San Frandisco (Acappella) 06. [12:09](https://y.be) | Mauro Picotto & Eftihios - Like This, Like That W/ | John Summit ft. HAYLA - Where You Are (John Summit & Maddix Edit) 07. [14:57](https://y.be) | Danny Avila & Matt Sassari - Diamonds"
+            // The implementation.md §5 sample, as it arrives from YouTube: one line, markdown links.
+            let sample = [
+                "01. [0:00](https://www.youtube.com/watch?v=x) | Belocca - Ifuna (Intro Edit)",
+                "02. [02:36](https://y.be/x&t=156s) | Dom Dolla ft. Daya - Dreamin (Eli Brown Remix)",
+                "03. [04:44](https://y.be) | John Summit ft. CLOVES - Focus (ALOK Remix)",
+                "04. [07:35](https://y.be) | A$AP Rocky - Lord Pretty Flacko Jodye 2 (LPFJ2) (HNTR Edit)",
+                "05. [10:06](https://y.be) | Vintage Culture - ID W/ | Dom Dolla - San Frandisco (Acappella)",
+                "06. [12:09](https://y.be) | Mauro Picotto & Eftihios - Like This, Like That W/ | John Summit ft. HAYLA - Where You Are (John Summit & Maddix Edit)",
+                "07. [14:57](https://y.be) | Danny Avila & Matt Sassari - Diamonds",
+            ].joined(separator: " ")
             if self != .importEmpty {
                 let url = URL(fileURLWithPath: "/Users/dj/Music/Tomorrowland_2026_Mainstage.mp3")
                 store.source = SourceFile(
@@ -154,5 +165,18 @@ private enum SampleArtwork {
               let prepared = try? ArtworkPreparer().prepare(png) else { return nil }
         return Artwork(jpeg: prepared.jpeg, pixelSize: prepared.pixelSize, notices: prepared.notices)
     }
+}
+
+/// Keeps snapshot runs from reading or overwriting the developer's saved options and folder bookmark.
+@MainActor
+private final class InMemoryPreferences: PreferencesStoring {
+    private var options = ParseOptions.default
+    private var genre: String?
+    func loadParseOptions() -> ParseOptions { options }
+    func saveParseOptions(_ options: ParseOptions) { self.options = options }
+    func loadGenre() -> String? { genre }
+    func saveGenre(_ genre: String) { self.genre = genre }
+    func loadOutputFolder() -> SecurityScopedAccess? { nil }
+    func saveOutputFolder(_ url: URL) {}
 }
 #endif

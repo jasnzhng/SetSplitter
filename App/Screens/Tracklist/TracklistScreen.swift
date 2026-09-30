@@ -11,7 +11,7 @@ import SetSplitterCore
 
 struct TracklistScreen: View {
 
-    @Bindable var model: TracklistViewModel
+    let model: TracklistViewModel
     @Environment(SessionStore.self) private var store
 
     var body: some View {
@@ -35,7 +35,7 @@ struct TracklistScreen: View {
 
 private struct TracklistEditor: View {
 
-    @Bindable var model: TracklistViewModel
+    let model: TracklistViewModel
     @Environment(SessionStore.self) private var store
 
     var body: some View {
@@ -100,7 +100,7 @@ private struct TracklistEditor: View {
 
 private struct PreviewSection: View {
 
-    @Bindable var model: TracklistViewModel
+    @Bindable var model: TracklistViewModel   // needs `$model.highlightedStart`
     @Environment(SessionStore.self) private var store
 
     var body: some View {
@@ -109,7 +109,7 @@ private struct PreviewSection: View {
                 SectionLabel("Preview")
                 Spacer()
                 if !store.tracks.isEmpty {
-                    Text("\(store.tracks.count) tracks · \(TrackTiming.format(store.source?.info.duration ?? 0))")
+                    Text("\(store.tracks.count) \(store.tracks.count == 1 ? "track" : "tracks") · \(TrackTiming.format(store.source?.info.duration ?? 0))")
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                         .contentTransition(.numericText())
@@ -120,39 +120,36 @@ private struct PreviewSection: View {
                 emptyState
             } else {
                 TimelineStrip(
-                    durations: store.durations, ids: store.tracks.map(\.id),
-                    highlightedID: $model.highlightedTrackID)
+                    durations: store.durations, ids: store.tracks.map(\.start),
+                    highlightedID: $model.highlightedStart)
                     .padding(.vertical, 4)
 
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(spacing: 6) {
-                            ForEach(Array(zip(store.tracks, store.durations)), id: \.0.start) { track, duration in
-                                TrackPreviewCard(
-                                    track: track, duration: duration,
-                                    isHighlighted: model.highlightedTrackID == track.id,
-                                    onTitle: { model.setTitle($0, for: track) },
-                                    onArtist: { model.setArtist($0, for: track) },
-                                    onRevert: { model.revert(track) })
-                                    .id(track.id)
-                                    .onHover { inside in
-                                        if inside { model.highlightedTrackID = track.id }
-                                        else if model.highlightedTrackID == track.id { model.highlightedTrackID = nil }
-                                    }
-                            }
+                ScrollView {
+                    LazyVStack(spacing: 6) {
+                        ForEach(Array(zip(store.tracks, store.durations)), id: \.0.start) { track, duration in
+                            TrackPreviewCard(
+                                track: track, duration: duration,
+                                isHighlighted: model.highlightedStart == track.start,
+                                onTitle: { model.setTitle($0, for: track) },
+                                onArtist: { model.setArtist($0, for: track) },
+                                onRevert: { model.revert(track) })
+                                .onHover { inside in
+                                    if inside { model.highlightedStart = track.start }
+                                    else if model.highlightedStart == track.start { model.highlightedStart = nil }
+                                }
                         }
-                        .padding(.vertical, 2)
-                        .padding(.trailing, 2)
                     }
-                    .scrollIndicators(.automatic)
+                    .padding(.vertical, 2)
+                    .padding(.trailing, 2)
                 }
+                .scrollIndicators(.automatic)
                 .frame(maxHeight: .infinity)
             }
 
             WarningsList(warnings: store.warnings)
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .animation(Theme.spring, value: store.tracks.isEmpty)
+        .animation(Theme.smooth, value: store.tracks.isEmpty)
     }
 
     private var emptyState: some View {

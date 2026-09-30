@@ -20,7 +20,9 @@ final class SessionStore {
 
     // MARK: Import
 
-    var source: SourceFile?
+    var source: SourceFile? {
+        didSet { refreshDerived() }
+    }
 
     // MARK: Tracklist
 
@@ -36,14 +38,34 @@ final class SessionStore {
         }
     }
 
-    private(set) var parseResult = ParseResult()
+    private(set) var parseResult = ParseResult() {
+        didSet { refreshDerived() }
+    }
 
     /// Manual corrections, layered over each re-parse (keyed by timestamp).
-    var edits = TrackEdits()
+    var edits = TrackEdits() {
+        didSet { refreshDerived() }
+    }
+
+    // Derived from `parseResult`, `edits` and `source`. Cached because several
+    // views read them on every body pass and `edits.applying` allocates.
+
+    /// Parser output with the user's inline edits applied.
+    private(set) var tracks: [ParsedTrack] = []
+
+    /// Seconds per track, aligned with `tracks`.
+    private(set) var durations: [Double] = []
+
+    /// Every warning worth showing under the preview, document-level first.
+    private(set) var warnings: [ParseWarning] = []
 
     // MARK: Album
 
     var albumTitle = ""
+
+    /// The last title we filled in from a filename. Lets a new file re-guess
+    /// the title unless the user has typed their own.
+    private(set) var guessedAlbumTitle: String?
     var albumArtist = ""
     var yearText = String(Calendar.current.component(.year, from: .now))
     var genre: String {
@@ -76,33 +98,32 @@ final class SessionStore {
 
     // MARK: Derived
 
-    /// Parser output with the user's inline edits applied.
-    var tracks: [ParsedTrack] { edits.applying(to: parseResult.tracks) }
-
-    /// Seconds per track, aligned with `tracks`.
-    var durations: [Double] {
-        TrackTiming.durations(of: tracks, sourceDuration: source?.info.duration ?? 0)
-    }
-
-    /// Every warning worth showing under the preview, document-level first.
-    var warnings: [ParseWarning] {
-        parseResult.warnings + tracks.flatMap(\.warnings)
+    private func refreshDerived() {
+        tracks = edits.applying(to: parseResult.tracks)
+        durations = TrackTiming.durations(of: tracks, sourceDuration: source?.info.duration ?? 0)
+        warnings = parseResult.warnings + tracks.flatMap(\.warnings)
     }
 
     var hasBlockingWarning: Bool { warnings.contains(where: \.isBlocking) }
 
-    /// An empty tracklist is legal (§14: exports one track named after the
-    /// album). Only a pasted-but-unparseable one blocks.
-    var canLeaveTracklist: Bool {
-        source != nil
-            && (tracklistText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !hasBlockingWarning)
+    /// An empty tracklist parses to no warnings at all (see `parse()`), so only
+    /// pasted-but-unparseable text blocks.
+    var canLeaveTracklist: Bool { source != nil && !hasBlockingWarning }
+
+    /// The release year, when `yearText` is a plausible four-digit year.
+    var year: Int? {
+        guard let value = Int(yearText.trimmed), (1000...9999).contains(value) else { return nil }
+        return value
     }
+
+    /// Empty is allowed (the tag is simply omitted); anything else must be a real year.
+    var yearIsValid: Bool { yearText.trimmed.isEmpty || year != nil }
 
     var albumMetadata: AlbumMetadata {
         AlbumMetadata(
             album: albumTitle.trimmed,
             albumArtist: albumArtist.trimmed,
-            year: Int(yearText.trimmed),
+            year: year,
             genre: genre.trimmed.isEmpty ? nil : genre.trimmed,
             comment: comment.trimmed.isEmpty ? nil : comment.trimmed,
             artworkJPEG: artwork?.jpeg,
@@ -115,7 +136,17 @@ final class SessionStore {
         return artist.isEmpty ? album : "\(artist) - \(album)"
     }
 
-    var canExport: Bool { source != nil && outputFolder != nil && albumMetadata.isComplete }
+    var canExport: Bool { source != nil && outputFolder != nil && albumMetadata.isComplete && yearIsValid }
+
+    /// What an export would actually write: ordering, dropped tracks and the
+    /// single-track fallback all applied. The form's track count comes from here
+    /// so it always matches the files.
+    var exportPlan: ExportPlan? {
+        guard let source else { return nil }
+        return ExportPlanner().plan(
+            tracks: tracks, source: source.info, leadIn: parseOptions.leadInStrategy,
+            albumTitle: albumTitle.trimmed)
+    }
 
     var exportRequest: ExportRequest? {
         guard let source, let outputFolder else { return nil }
@@ -137,7 +168,21 @@ final class SessionStore {
     /// the debounced `scheduleReparse()`.
     func reparse() {
         reparseTask?.cancel()
-        parseResult = parser.parse(text: tracklistText, options: parseOptions)
+        parseResult = parse()
+    }
+
+    /// An empty tracklist is legal (§14: one track named after the album), so it
+    /// shows no tracks *and* no warnings rather than the parser's "no timestamps".
+    private func parse() -> ParseResult {
+        tracklistText.trimmed.isEmpty ? ParseResult() : parser.parse(text: tracklistText, options: parseOptions)
+    }
+
+    /// Fills the album title from `filename` unless the user has typed their own.
+    func guessAlbumTitle(fromFilename filename: String) {
+        guard albumTitle.trimmed.isEmpty || albumTitle == guessedAlbumTitle else { return }
+        let guess = AlbumNameGuesser.guess(fromFilename: filename)
+        albumTitle = guess
+        guessedAlbumTitle = guess
     }
 
     /// Debounces per-keystroke parsing by ~100 ms (§10) so a fast typist doesn't
@@ -148,7 +193,7 @@ final class SessionStore {
         reparseTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(100))
             guard !Task.isCancelled, let self else { return }
-            self.parseResult = self.parser.parse(text: self.tracklistText, options: self.parseOptions)
+            self.parseResult = self.parse()
         }
     }
 
@@ -160,6 +205,7 @@ final class SessionStore {
         parseResult = ParseResult()
         edits = TrackEdits()
         albumTitle = ""
+        guessedAlbumTitle = nil
         albumArtist = ""
         comment = ""
         isCompilation = false
