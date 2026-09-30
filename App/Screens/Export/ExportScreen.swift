@@ -18,17 +18,14 @@ struct ExportScreen: View {
         ZStack {
             switch store.exportState {
             case .idle:
-                ExportForm(model: model)
-                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                ExportForm(model: model).transition(Self.swap)
             case .running(let progress):
-                ExportProgressPanel(progress: progress, onCancel: model.cancel)
-                    .transition(.opacity.combined(with: .scale(scale: 1.02)))
+                ExportProgressPanel(progress: progress, onCancel: model.cancel).transition(Self.swap)
             case .finished(let result):
                 ExportDonePanel(result: result, onReveal: model.revealInFinder, onEdit: model.editSettings)
-                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    .transition(Self.swap)
             case .failed(let message):
-                ExportFailedPanel(message: message, onRetry: model.editSettings)
-                    .transition(.opacity)
+                ExportFailedPanel(message: message, onRetry: model.editSettings).transition(Self.swap)
             }
         }
         .animation(Theme.spring, value: stateKey)
@@ -44,6 +41,12 @@ struct ExportScreen: View {
             Text("Replace moves the existing folder to the Trash. Keep Both saves this export next to it.")
         }
     }
+
+    /// The outgoing panel fades out fast and the incoming one fades in after a
+    /// beat, so the two never overlap as garbled text mid-transition.
+    private static let swap = AnyTransition.asymmetric(
+        insertion: .opacity.combined(with: .scale(scale: 0.98)).animation(.smooth(duration: 0.35).delay(0.12)),
+        removal: .opacity.animation(.easeOut(duration: 0.12)))
 
     /// Distinguishes the four export states for animation without making
     /// `ExportProgress` updates (10×/s) retrigger the transition.

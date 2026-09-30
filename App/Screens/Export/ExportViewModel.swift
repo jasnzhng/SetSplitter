@@ -131,14 +131,16 @@ final class ExportViewModel {
     private func start() {
         guard let request = store.exportRequest else { return }
         store.exportState = .running(ExportProgress(
-            totalFrames: request.sourceInfo.totalFrames, currentTitle: ""))
+            totalFrames: request.sourceInfo.totalFrames, trackCount: max(1, request.tracks.count)))
         let job = self.job
         let store = self.store
 
         // Detached so the synchronous decode loop can never run on the main actor,
         // whatever the toolchain's default isolation for async functions is.
+        // A detached task is *not* a child of `exportTask`, so cancellation must be
+        // forwarded by hand or Cancel would silently do nothing.
         exportTask = Task {
-            let outcome = await Task.detached(priority: .userInitiated) { () -> Result<ExportResult, Error> in
+            let worker = Task.detached(priority: .userInitiated) { () -> Result<ExportResult, Error> in
                 do {
                     let result = try await job.run(request) { progress in
                         Task { @MainActor in
@@ -150,7 +152,12 @@ final class ExportViewModel {
                 } catch {
                     return .failure(error)
                 }
-            }.value
+            }
+            let outcome = await withTaskCancellationHandler {
+                await worker.value
+            } onCancel: {
+                worker.cancel()
+            }
 
             switch outcome {
             case .success(let result):

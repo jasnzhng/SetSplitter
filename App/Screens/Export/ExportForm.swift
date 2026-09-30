@@ -18,6 +18,7 @@ struct ExportForm: View {
         HStack(alignment: .top, spacing: 26) {
             ArtworkPicker(model: model)
                 .frame(width: 250)
+                .padding(.top, 10)   // lines the "Artwork" label up with the form's first section header
 
             VStack(alignment: .leading, spacing: 10) {
                 AlbumMetadataForm(model: model)

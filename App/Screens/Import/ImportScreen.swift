@@ -141,8 +141,8 @@ struct LoadedFileCard: View {
 
             HStack(spacing: 24) {
                 stat(TrackTiming.format(source.info.duration), "Duration")
-                stat(source.info.bitrateKbps.map { "\($0) kbps" } ?? "—", "Bitrate")
                 stat(String(format: "%.1f kHz", source.info.sampleRate / 1000), "Sample rate")
+                stat(source.info.channels == 1 ? "Mono" : source.info.channels == 2 ? "Stereo" : "\(source.info.channels) ch", "Channels")
             }
             .padding(.top, 2)
 

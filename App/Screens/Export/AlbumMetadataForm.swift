@@ -66,19 +66,20 @@ struct AlbumMetadataForm: View {
         .animation(Theme.quick, value: isMissing)
     }
 
+    /// A plain HStack rather than `LabeledContent`, which would wrap a long
+    /// path onto a second line; here the path truncates from the head instead.
     private var folderRow: some View {
         let isMissing = model.showsValidation && store.outputFolder == nil
-        return LabeledContent {
-            HStack(spacing: 8) {
-                Text(store.outputFolder.map { Self.displayPath($0.url) } ?? "No folder chosen")
-                    .foregroundStyle(store.outputFolder == nil ? (isMissing ? Color.red : Color.secondary) : Color.primary)
-                    .lineLimit(1)
-                    .truncationMode(.head)
-                Button("Choose…") { Task { await model.chooseFolder() } }
-            }
-        } label: {
+        return HStack(spacing: 10) {
             Text("Folder").foregroundStyle(isMissing ? Color.red : Color.primary)
+            Spacer(minLength: 12)
+            Text(store.outputFolder.map { Self.displayPath($0.url) } ?? "No folder chosen")
+                .foregroundStyle(store.outputFolder == nil ? (isMissing ? Color.red : Color.secondary) : Color.secondary)
+                .lineLimit(1)
+                .truncationMode(.head)
+            Button("Choose…") { Task { await model.chooseFolder() } }
         }
+        .animation(Theme.quick, value: isMissing)
     }
 
     /// Settings used only to preview the folder name the export would create.
