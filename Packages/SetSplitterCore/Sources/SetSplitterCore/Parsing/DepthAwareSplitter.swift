@@ -35,7 +35,7 @@ struct DepthAwareSplitter {
     /// Returns `nil` if none match.
     func firstSplit(of separators: [String], in input: String, wholeWord: Bool) -> Match? {
         let chars = Array(input)
-        let flatten = !bracketsBalanced(chars)
+        let flatten = !TextHelpers.bracketsBalanced(chars)
         let lowerTokens = separators.map { Array($0.lowercased()) }
 
         var depth = 0
@@ -73,7 +73,7 @@ struct DepthAwareSplitter {
     /// Always returns at least one component. Components are not trimmed.
     func allComponents(splittingOn separators: [String], in input: String, wholeWord: Bool) -> [String] {
         let chars = Array(input)
-        let flatten = !bracketsBalanced(chars)
+        let flatten = !TextHelpers.bracketsBalanced(chars)
         let lowerTokens = separators.map { Array($0.lowercased()) }
 
         var components: [String] = []
@@ -117,21 +117,6 @@ struct DepthAwareSplitter {
     }
 
     // MARK: - Helpers
-
-    private func bracketsBalanced(_ chars: [Character]) -> Bool {
-        var round = 0
-        var square = 0
-        for c in chars {
-            switch c {
-            case "(": round += 1
-            case ")": round -= 1; if round < 0 { return false }
-            case "[": square += 1
-            case "]": square -= 1; if square < 0 { return false }
-            default: break
-            }
-        }
-        return round == 0 && square == 0
-    }
 
     /// Case-insensitive compare of `token` (already lowercased) against
     /// `chars[at ..< at+token.count]`, with optional word-boundary checks on

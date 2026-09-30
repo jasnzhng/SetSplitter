@@ -67,7 +67,7 @@ struct CreditParser {
         if titles.isEmpty { warnings.append(.emptyTitle) }
 
         // (e) trim + dedupe artists case-insensitively, first occurrence wins
-        artists = dedupe(artists.map(normalize).filter { !$0.isEmpty })
+        artists = TextHelpers.dedupedCaseInsensitively(artists.map(normalize).filter { !$0.isEmpty })
 
         return Credit(artists: artists, titles: titles, warnings: warnings)
     }
@@ -161,7 +161,7 @@ struct CreditParser {
     }
 
     private func topLevelBracketGroups(in chars: [Character]) -> [BracketGroup] {
-        guard bracketsBalanced(chars) else { return [] }
+        guard TextHelpers.bracketsBalanced(chars) else { return [] }
         var groups: [BracketGroup] = []
         var depth = 0
         var openAt = -1
@@ -180,33 +180,10 @@ struct CreditParser {
         return groups
     }
 
-    private func bracketsBalanced(_ chars: [Character]) -> Bool {
-        var round = 0, square = 0
-        for c in chars {
-            switch c {
-            case "(": round += 1
-            case ")": round -= 1; if round < 0 { return false }
-            case "[": square += 1
-            case "]": square -= 1; if square < 0 { return false }
-            default: break
-            }
-        }
-        return round == 0 && square == 0
-    }
-
     // MARK: - (e) helpers
 
     private func normalize(_ s: some StringProtocol) -> String {
         String(s).replacing(whitespaceRun, with: " ").trimmingCharacters(in: .whitespaces)
     }
 
-    private func dedupe(_ names: [String]) -> [String] {
-        var seen = Set<String>()
-        var out: [String] = []
-        for n in names {
-            let key = n.lowercased()
-            if seen.insert(key).inserted { out.append(n) }
-        }
-        return out
-    }
 }

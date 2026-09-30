@@ -51,6 +51,8 @@ public extension Timestamp {
             }
             values.append(n)
         }
+        // Absurd fields would overflow the arithmetic below; no real set is this long.
+        guard values.allSatisfy({ $0 < 100_000 }) else { return nil }
 
         let hours: Int
         let minutes: Int
@@ -74,6 +76,7 @@ public extension Timestamp {
     /// `h:mm:ss` when at least an hour, otherwise `m:ss`. Used for preview cards
     /// and warning messages, not for tags.
     var displayString: String {
+        guard seconds.isFinite else { return "0:00" }
         let total = Int(seconds.rounded())
         let h = total / 3600
         let m = (total % 3600) / 60

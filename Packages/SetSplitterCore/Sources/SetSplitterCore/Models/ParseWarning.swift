@@ -67,7 +67,7 @@ public extension ParseWarning {
         case .noTracksParsed:
             return "Couldn't parse any tracks from this tracklist."
         case .firstTimestampNotZero(let ts):
-            return "First track starts at \(ts.displayString), not 0:00. Audio before it will be included in track 1 unless you choose to trim it."
+            return "The first track starts at \(ts.displayString), not 0:00. “Before first time” in Options decides whether the audio before it is kept or trimmed."
         case .timestampNotIncreasing:
             return "This track's timestamp is not later than the previous one."
         case .duplicateTimestamp(let ts):

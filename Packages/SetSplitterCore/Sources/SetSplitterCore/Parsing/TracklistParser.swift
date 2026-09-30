@@ -73,19 +73,22 @@ public struct TracklistParser: Sendable {
 
     // MARK: - Normalisation (implementation.md §14)
 
-    /// CRLF/CR → LF, NBSP and other Unicode spaces → ASCII space, zero-width
-    /// characters removed. Done once up front so every downstream stage —
+    /// CRLF/CR/U+2028/U+2029 → LF, NBSP and other Unicode spaces → ASCII space,
+    /// invisible zero-width characters removed (but not the ZWJ, which glues emoji
+    /// sequences together). Done once up front so every downstream stage —
     /// including `TimestampScanner`, which runs before `SegmentCleaner` — sees
     /// clean text. (§14 assigns this to `SegmentCleaner`; hoisting it is a
     /// deliberate deviation because the scanner runs first.)
     static func normalize(_ text: String) -> String {
+        // CRLF first so it becomes one LF, then any lone CR (classic Mac endings).
+        let lines = text.replacing("\r\n", with: "\n")
         var out = String()
-        out.reserveCapacity(text.count)
-        for scalar in text.unicodeScalars {
+        out.reserveCapacity(lines.count)
+        for scalar in lines.unicodeScalars {
             switch scalar.value {
-            case 0x0D:                       // CR — collapse CRLF/CR to LF
-                continue
-            case 0x200B, 0x200C, 0x200D, 0xFEFF:  // ZWSP, ZWNJ, ZWJ, BOM
+            case 0x0D, 0x2028, 0x2029:       // lone CR, line/paragraph separator → LF
+                out.unicodeScalars.append("\n")
+            case 0x200B, 0x200C, 0xFEFF:     // ZWSP, ZWNJ, BOM (ZWJ deliberately kept)
                 continue
             case 0x00A0, 0x2007, 0x202F, 0x2009, 0x2002...0x2006, 0x2008, 0x205F, 0x3000:
                 out.unicodeScalars.append(" ")
@@ -126,13 +129,13 @@ public struct TracklistParser: Sendable {
         }
     }
 
-    /// §5 validation: a gap to the next track under 5 s → warn. The last
+    /// §5 validation: a gap to the next track under `TrackTiming.shortTrackThreshold` → warn. The last
     /// track's length needs the source duration and is checked by the planner.
     private func flagShortTracks(_ tracks: inout [ParsedTrack]) {
         guard tracks.count > 1 else { return }
         for i in 0..<(tracks.count - 1) {
             let gap = tracks[i + 1].start.seconds - tracks[i].start.seconds
-            if gap > 0, gap < 5, !tracks[i].warnings.contains(.trackShorterThanFiveSeconds) {
+            if gap > 0, gap < TrackTiming.shortTrackThreshold, !tracks[i].warnings.contains(.trackShorterThanFiveSeconds) {
                 tracks[i].warnings.append(.trackShorterThanFiveSeconds)
             }
         }

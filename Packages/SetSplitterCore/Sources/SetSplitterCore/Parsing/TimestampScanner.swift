@@ -38,7 +38,7 @@ struct TimestampScanner {
         let cleaned = stripURLs(from: text)
         let chars = Array(cleaned)
 
-        // Collect accepted timestamp matches as (afterIndex, start, matchStartIndex).
+        // Accepted timestamp matches, as character offsets into `cleaned`.
         var hits: [(matchStart: Int, matchEnd: Int, start: Timestamp)] = []
         for match in cleaned.matches(of: timestampPattern) {
             let lower = cleaned.distance(from: cleaned.startIndex, to: match.range.lowerBound)
@@ -54,8 +54,7 @@ struct TimestampScanner {
         for (i, hit) in hits.enumerated() {
             let textStart = hit.matchEnd
             let textEnd = (i + 1 < hits.count) ? hits[i + 1].matchStart : chars.count
-            let slice = textStart <= textEnd ? String(chars[textStart..<textEnd]) : ""
-            segments.append(RawSegment(start: hit.start, text: slice))
+            segments.append(RawSegment(start: hit.start, text: String(chars[textStart..<textEnd])))
         }
         return segments
     }

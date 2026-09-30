@@ -1,0 +1,128 @@
+import AVFoundation
+import Foundation
+import Testing
+@testable import SetSplitterCore
+
+enum AudioTestSupport {
+
+    /// Fixtures/audio/<name>, located via #filePath (SwiftPM tests have no reliable CWD).
+    static func fixture(_ name: String, file: StaticString = #filePath) -> URL {
+        URL(fileURLWithPath: "\(file)")
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/audio/\(name)")
+    }
+
+    /// Writes a 440 Hz sine as a PCM WAV: 8/16/24-bit integer, or 32-bit float. Lets tests cover any rate, channel count
+    /// and bit depth without committing megabytes of fixtures.
+    static func writeWAV(
+        to url: URL, sampleRate: Int, channels: Int, bitsPerSample: Int, seconds: Int
+    ) throws {
+        let bytesPerSample = bitsPerSample / 8
+        let frames = sampleRate * seconds
+        let dataSize = frames * channels * bytesPerSample
+        var data = Data(capacity: 44 + dataSize)
+        func u32(_ v: Int) { withUnsafeBytes(of: UInt32(v).littleEndian) { data.append(contentsOf: $0) } }
+        func u16(_ v: Int) { withUnsafeBytes(of: UInt16(v).littleEndian) { data.append(contentsOf: $0) } }
+        data.append(contentsOf: Array("RIFF".utf8)); u32(36 + dataSize)
+        data.append(contentsOf: Array("WAVEfmt ".utf8)); u32(16)
+        u16(bitsPerSample == 32 ? 3 : 1)   // format 1 = integer PCM, 3 = IEEE float
+        u16(channels); u32(sampleRate); u32(sampleRate * channels * bytesPerSample)
+        u16(channels * bytesPerSample); u16(bitsPerSample)
+        data.append(contentsOf: Array("data".utf8)); u32(dataSize)
+        for frame in 0..<frames {
+            let x = 0.5 * sin(2 * .pi * 440 * Double(frame) / Double(sampleRate))
+            for _ in 0..<channels {
+                switch bitsPerSample {
+                case 8: data.append(UInt8(128 + Int(x * 127)))     // 8-bit WAV is unsigned
+                case 16: u16(Int(Int16(x * 32_767)) & 0xFFFF)
+                case 32: u32(Int(Float(x).bitPattern))
+                default:                                            // 24-bit little-endian, signed
+                    let v = Int(x * 8_388_607)
+                    data.append(contentsOf: [UInt8(v & 0xFF), UInt8((v >> 8) & 0xFF), UInt8((v >> 16) & 0xFF)])
+                }
+            }
+        }
+        try data.write(to: url)
+    }
+
+    /// Decodes a file to interleaved float samples via AVAssetReader (which honours iTunSMPB trimming).
+    static func decode(_ url: URL) async throws -> (samples: [Float], channels: Int) {
+        let asset = AVURLAsset(url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+        let track = try #require(try await asset.loadTracks(withMediaType: .audio).first)
+        let fd = try #require(try await track.load(.formatDescriptions).first)
+        let asbd = try #require(CMAudioFormatDescriptionGetStreamBasicDescription(fd)?.pointee)
+        let channels = Int(asbd.mChannelsPerFrame)
+        let reader = try AVAssetReader(asset: asset)
+        let out = AVAssetReaderTrackOutput(track: track, outputSettings: EncodingSettings.readerLPCM(
+            sampleRate: asbd.mSampleRate, channels: channels))
+        reader.add(out)
+        reader.startReading()
+        var samples: [Float] = []
+        while let sb = out.copyNextSampleBuffer() {
+            guard let block = CMSampleBufferGetDataBuffer(sb) else { continue }
+            let len = CMBlockBufferGetDataLength(block)
+            var chunk = [Float](repeating: 0, count: len / MemoryLayout<Float>.size)
+            chunk.withUnsafeMutableBytes { _ = CMBlockBufferCopyDataBytes(block, atOffset: 0, dataLength: len, destination: $0.baseAddress!) }
+            samples.append(contentsOf: chunk)
+        }
+        return (samples, channels)
+    }
+
+    /// Decoded frame count via AVAssetReader (which honours iTunSMPB), streaming: nothing is kept in memory.
+    static func frameCount(_ url: URL) async throws -> Int64 {
+        let asset = AVURLAsset(url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+        let track = try #require(try await asset.loadTracks(withMediaType: .audio).first)
+        let fd = try #require(try await track.load(.formatDescriptions).first)
+        let asbd = try #require(CMAudioFormatDescriptionGetStreamBasicDescription(fd)?.pointee)
+        let reader = try AVAssetReader(asset: asset)
+        let out = AVAssetReaderTrackOutput(track: track, outputSettings: EncodingSettings.readerLPCM(
+            sampleRate: asbd.mSampleRate, channels: Int(asbd.mChannelsPerFrame)))
+        reader.add(out)
+        reader.startReading()
+        var frames: Int64 = 0
+        while let sb = out.copyNextSampleBuffer() { frames += Int64(CMSampleBufferGetNumSamples(sb)) }
+        return frames
+    }
+
+    /// Raw `ilst` payloads keyed by atom fourcc (e.g. "trkn", "aART"). AVAsset.load(.metadata) is *not*
+    /// a real verification (Phase 0 finding), so this walks the file bytes.
+    static func ilst(_ url: URL) throws -> [String: Data] {
+        let d = try Data(contentsOf: url)
+        var result: [String: Data] = [:]
+        func be32(_ i: Int) -> Int { Int(d[i]) << 24 | Int(d[i+1]) << 16 | Int(d[i+2]) << 8 | Int(d[i+3]) }
+        func cc(_ i: Int) -> String { String(decoding: d[i..<i+4].map { $0 }, as: UTF8.self) }
+        func cc1(_ i: Int) -> String { String(String.UnicodeScalarView(d[i..<i+4].map { Unicode.Scalar($0) })) }
+        func walk(_ start: Int, _ end: Int) {
+            var i = start
+            while i + 8 <= end {
+                var size = be32(i); let type = cc1(i + 4)
+                if size == 1, i + 16 <= end { size = be32(i + 12) }   // 64-bit largesize (AVAssetWriter's mdat)
+                guard size >= 8, i + size <= end else { return }
+                switch type {
+                case "moov", "udta": walk(i + 8, i + size)
+                case "meta": walk(i + 12, i + size)
+                case "ilst":
+                    var j = i + 8
+                    while j + 8 <= i + size {
+                        let asz = be32(j); let name = cc1(j + 4)
+                        guard asz >= 8 else { break }
+                        if j + 16 + 8 <= j + asz, cc1(j + 12) == "data" {
+                            result[name] = d[(j + 24)..<(j + asz)]
+                        }
+                        j += asz
+                    }
+                default: break
+                }
+                i += size
+            }
+        }
+        walk(0, d.count)
+        return result
+    }
+
+    static func makeTempDirectory() throws -> URL {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("SetSplitterTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+}
