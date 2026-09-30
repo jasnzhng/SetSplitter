@@ -33,9 +33,12 @@ enum SnapshotRunner {
             for scenario in Scenario.allCases {
                 let model = AppModel(preferences: InMemoryPreferences())   // never touch the developer's real defaults
                 scenario.seed(model)
-                let root: AnyView = scenario == .turntableGallery
-                    ? AnyView(TurntableGallery().background(LivingBackdrop(palette: .resting(for: .importFile))))
-                    : AnyView(WizardView(model: model))
+                let root: AnyView
+                switch scenario {
+                case .turntableGallery: root = AnyView(TurntableGallery().background(LivingBackdrop(palette: .resting(for: .importFile))))
+                case .finaleGallery: root = AnyView(FinaleGallery())
+                default: root = AnyView(WizardView(model: model))
+                }
                 let window = makeWindow(root: root, appearance: appearance)
                 await settle()
                 write(window, to: directory.appendingPathComponent("\(scenario.rawValue)-\(name).png"))
@@ -84,6 +87,7 @@ enum SnapshotRunner {
         case exportDone = "09-export-done"
         case exportFailed = "10-export-failed"
         case turntableGallery = "11-turntable-gallery"
+        case finaleGallery = "12-finale-gallery"
 
         @MainActor
         func seed(_ model: AppModel) {
@@ -98,7 +102,7 @@ enum SnapshotRunner {
                 "06. [12:09](https://y.be) | Mauro Picotto & Eftihios - Like This, Like That W/ | John Summit ft. HAYLA - Where You Are (John Summit & Maddix Edit)",
                 "07. [14:57](https://y.be) | Danny Avila & Matt Sassari - Diamonds",
             ].joined(separator: " ")
-            if self != .importEmpty, self != .turntableGallery {
+            if self != .importEmpty, self != .turntableGallery, self != .finaleGallery {
                 let url = URL(fileURLWithPath: "/Users/dj/Music/Tomorrowland_2026_Mainstage.mp3")
                 store.source = SourceFile(
                     url: url,
@@ -107,7 +111,7 @@ enum SnapshotRunner {
                 store.albumTitle = "Tomorrowland 2026 Mainstage"
             }
             switch self {
-            case .importEmpty, .importLoaded, .turntableGallery: break
+            case .importEmpty, .importLoaded, .turntableGallery, .finaleGallery: break
             case .tracklistEmpty: store.step = .tracklist
             case .tracklistSample, .tracklistEdited:
                 store.step = .tracklist
@@ -166,6 +170,43 @@ private struct TurntableGallery: View {
 
     private func labelled<V: View>(_ title: String, _ view: V) -> some View {
         VStack(spacing: 6) { view; Text(title).font(.caption).foregroundStyle(.secondary) }
+    }
+}
+
+/// Four moments of the export finale, frozen, in one frame.
+private struct FinaleGallery: View {
+
+    /// (label, finale flags, finished?) for each frame.
+    private let moments: [(String, ExportFinale, Bool)] = [
+        ("working", ExportFinale(), false),
+        ("cover in, arm on", ExportFinale(progressGone: true, sleeveShown: true), true),
+        ("record sliding in", ExportFinale(progressGone: true, sleeveShown: true, armGone: true, recordStopped: true, recordSlide: 0.55), true),
+        ("settled", .complete, true),
+    ]
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ForEach(Array(moments.enumerated()), id: \.offset) { _, frame in
+                let model = makeModel(finished: frame.2)
+                ExportStage(model: model.exportViewModel, startingFinale: frame.1, alreadyFinished: false, playsFinale: false)
+                    .environment(model.store)
+                    .frame(width: 800, height: 390)      // the stage's natural size…
+                    .scaleEffect(0.5)                    // …shown at half size…
+                    .frame(width: 400, height: 155)      // …in a frame that matches it
+                    .overlay(alignment: .topLeading) { Text(frame.0).font(.system(size: 9, design: .monospaced)).foregroundStyle(.secondary) }
+            }
+        }
+        .padding(8)
+        .frame(width: 940, height: 660)
+        .background(LivingBackdrop(palette: .resting(for: .export)))
+    }
+
+    @MainActor
+    private func makeModel(finished: Bool) -> AppModel {
+        let model = AppModel(preferences: InMemoryPreferences())
+        SnapshotRunner.Scenario.exportRunning.seed(model)
+        if finished { SnapshotRunner.Scenario.exportDone.seed(model) }
+        return model
     }
 }
 

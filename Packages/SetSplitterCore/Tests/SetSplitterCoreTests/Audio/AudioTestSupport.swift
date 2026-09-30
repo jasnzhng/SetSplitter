@@ -35,6 +35,22 @@ enum AudioTestSupport {
         return (samples, channels)
     }
 
+    /// Decoded frame count via AVAssetReader (which honours iTunSMPB), streaming: nothing is kept in memory.
+    static func frameCount(_ url: URL) async throws -> Int64 {
+        let asset = AVURLAsset(url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+        let track = try #require(try await asset.loadTracks(withMediaType: .audio).first)
+        let fd = try #require(try await track.load(.formatDescriptions).first)
+        let asbd = try #require(CMAudioFormatDescriptionGetStreamBasicDescription(fd)?.pointee)
+        let reader = try AVAssetReader(asset: asset)
+        let out = AVAssetReaderTrackOutput(track: track, outputSettings: EncodingSettings.readerLPCM(
+            sampleRate: asbd.mSampleRate, channels: Int(asbd.mChannelsPerFrame)))
+        reader.add(out)
+        reader.startReading()
+        var frames: Int64 = 0
+        while let sb = out.copyNextSampleBuffer() { frames += Int64(CMSampleBufferGetNumSamples(sb)) }
+        return frames
+    }
+
     /// Raw `ilst` payloads keyed by atom fourcc (e.g. "trkn", "aART"). AVAsset.load(.metadata) is *not*
     /// a real verification (Phase 0 finding), so this walks the file bytes.
     static func ilst(_ url: URL) throws -> [String: Data] {

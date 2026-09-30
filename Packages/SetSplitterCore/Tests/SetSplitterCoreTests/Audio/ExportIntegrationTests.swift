@@ -50,7 +50,7 @@ struct ExportIntegrationTests {
         let src = try await AudioTestSupport.decode(source)
         let outs = try await result.files.asyncMap { try await AudioTestSupport.decode($0) }
         let total = outs.reduce(0) { $0 + $1.samples.count / $1.channels }
-        #expect(total == src.samples.count / src.channels, "concatenated frames must equal source frames")
+        #expect(total == src.samples.count / src.channels, "concatenated frames \(total) must equal source frames \(src.samples.count / src.channels); per-track \(outs.map { $0.samples.count / $0.channels })")
         #expect(outs.map { $0.samples.count / 2 } == [441_000, 441_000, src.samples.count / 2 - 882_000])
 
         // Seam continuity. AAC is lossy, so the decode never equals the source, and each track's

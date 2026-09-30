@@ -14,6 +14,9 @@ struct ArtworkPicker: View {
     let model: ExportViewModel
     @Environment(SessionStore.self) private var store
     @State private var isTargeted = false
+    /// Pointer position over the artwork, -0.5…0.5 on each axis; drives the tilt.
+    @State private var tilt: CGSize = .zero
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -26,7 +29,19 @@ struct ArtworkPicker: View {
                         .accessibilityLabel("Album artwork")
                         .aspectRatio(1, contentMode: .fill)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
+                        .shadow(color: .black.opacity(0.25), radius: 14 + abs(tilt.width) * 10, x: -tilt.width * 14, y: 6 + tilt.height * 8)
+                        // Tilts toward the pointer, like turning a sleeve in your hands.
+                        .rotation3DEffect(.degrees(tilt.height * -9), axis: (x: 1, y: 0, z: 0), perspective: 0.6)
+                        .rotation3DEffect(.degrees(tilt.width * 11), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
+                        .onContinuousHover { phase in
+                            guard !reduceMotion else { return }
+                            withAnimation(.smooth(duration: 0.25)) {
+                                switch phase {
+                                case .active(let point): tilt = CGSize(width: point.x / 250 - 0.5, height: point.y / 250 - 0.5)
+                                case .ended: tilt = .zero
+                                }
+                            }
+                        }
                         .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 } else {
                     Button { Task { await model.browseForArtwork() } } label: { placeholder }

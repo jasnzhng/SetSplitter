@@ -47,11 +47,10 @@ struct TrackPreviewCard: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.rowRadius, style: .continuous))
+        .glassSurface(cornerRadius: Theme.rowRadius, interactive: false)
         .overlay(
             RoundedRectangle(cornerRadius: Theme.rowRadius, style: .continuous)
-                .strokeBorder(isHighlighted ? Color.accentColor.opacity(0.7) : Color(nsColor: .separatorColor).opacity(0.5),
-                              lineWidth: isHighlighted ? 1.25 : 0.5)
+                .strokeBorder(Color.accentColor.opacity(isHighlighted ? 0.7 : 0), lineWidth: 1.25)
         )
         .scaleEffect(isHighlighted ? 1.012 : 1)
         .shadow(color: .black.opacity(isHighlighted ? 0.18 : 0), radius: 8, y: 3)

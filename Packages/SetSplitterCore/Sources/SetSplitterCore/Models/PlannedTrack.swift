@@ -31,6 +31,9 @@ public struct PlannedTrack: Sendable, Identifiable {
         self.filename = filename
     }
 
+    /// Length in source sample frames.
+    public var frameCount: Int64 { range.upperBound - range.lowerBound }
+
     /// Title written to the tag; never empty.
     public var displayTitle: String {
         let t = track.title.trimmingCharacters(in: .whitespacesAndNewlines)

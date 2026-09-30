@@ -19,12 +19,10 @@ struct ExportScreen: View {
             switch store.exportState {
             case .idle:
                 ExportForm(model: model).transition(Self.swap)
-            case .running(let progress):
-                ExportProgressPanel(progress: progress, onCancel: model.cancel).transition(Self.swap)
-            case .finished(let result):
-                ExportDonePanel(result: result, cover: store.artwork?.image, palette: store.backdropPalette,
-                                onReveal: model.revealInFinder, onEdit: model.editSettings)
-                    .transition(Self.swap)
+            case .running, .finished:
+                // One view for both: the finish is an animation *within* the stage, not a screen swap.
+                ExportStage(model: model, alreadyFinished: isAlreadyFinished)
+                    .transition(.opacity)
             case .failed(let message):
                 ExportFailedPanel(message: message, onRetry: model.editSettings).transition(Self.swap)
             }
@@ -43,6 +41,13 @@ struct ExportScreen: View {
         }
     }
 
+    /// `true` only when this screen is first built already showing a finished export
+    /// (e.g. restored / snapshot) — a live run reaches `.finished` *inside* the stage and animates.
+    private var isAlreadyFinished: Bool {
+        if case .finished = store.exportState { return true }
+        return false
+    }
+
     /// The outgoing panel fades out fast and the incoming one fades in after a
     /// beat, so the two never overlap as garbled text mid-transition.
     private static let swap = AnyTransition.asymmetric(
@@ -59,9 +64,8 @@ struct ExportScreen: View {
     private var stateKey: Int {
         switch store.exportState {
         case .idle: 0
-        case .running: 1
-        case .finished: 2
-        case .failed: 3
+        case .running, .finished: 1
+        case .failed: 2
         }
     }
 }

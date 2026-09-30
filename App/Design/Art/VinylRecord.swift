@@ -8,7 +8,6 @@
 //  spins while `isSpinning`, and never under Reduce Motion.
 //
 
-import AppKit
 import SwiftUI
 
 struct VinylRecord: View {
@@ -20,8 +19,6 @@ struct VinylRecord: View {
     var labelColors: [Color] = [ArtPalette.coral, ArtPalette.plum]
     /// Fractions (0…1) of the groove area at which to draw a track-gap band.
     var trackGaps: [Double] = []
-    /// Replaces the plain label with this image (the album cover), turning with the record.
-    var labelImage: NSImage?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -33,20 +30,8 @@ struct VinylRecord: View {
             let angle = isSpinning && !reduceMotion
                 ? (context.date.timeIntervalSinceReferenceDate * degreesPerSecond).truncatingRemainder(dividingBy: 360)
                 : 0
-            ZStack {
-                Canvas { canvas, canvasSize in
-                    draw(in: &canvas, size: canvasSize, sheenAngle: angle)
-                }
-                if let labelImage {
-                    Image(nsImage: labelImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: size * 0.68, height: size * 0.68)
-                        .clipShape(Circle())
-                        .overlay(Circle().strokeBorder(.white.opacity(0.25), lineWidth: 0.6))
-                        .overlay(Circle().fill(Color(white: 0.05)).frame(width: size * 0.056))   // spindle hole
-                        .rotationEffect(.degrees(angle))
-                }
+            Canvas { canvas, canvasSize in
+                draw(in: &canvas, size: canvasSize, sheenAngle: angle)
             }
         }
         .frame(width: size, height: size)
@@ -69,7 +54,7 @@ struct VinylRecord: View {
             center: center, startRadius: 0, endRadius: radius))
 
         // Grooves: hairline rings between the label and the rim, alternating strength.
-        let inner = radius * 0.36, outer = radius * 0.965
+        let inner = radius * 0.31, outer = radius * 0.965
         var r = inner + 3
         var step = 0
         while r < outer {
@@ -100,7 +85,7 @@ struct VinylRecord: View {
         canvas.stroke(circle(radius - 0.5), with: .color(.white.opacity(0.12)), lineWidth: 1)
 
         // Label.
-        let labelRadius = radius * 0.34
+        let labelRadius = radius * 0.28   // ~a third of the disc's width, like a real 12-inch
         canvas.fill(circle(labelRadius), with: .linearGradient(
             Gradient(colors: labelColors.isEmpty ? [ArtPalette.coral] : labelColors),
             startPoint: CGPoint(x: center.x - labelRadius, y: center.y - labelRadius),
@@ -109,6 +94,6 @@ struct VinylRecord: View {
         canvas.stroke(circle(labelRadius * 0.62), with: .color(.white.opacity(0.14)), lineWidth: 0.5)
 
         // Spindle hole.
-        canvas.fill(circle(radius * 0.028), with: .color(Color(white: 0.05)))
+        canvas.fill(circle(radius * 0.02), with: .color(Color(white: 0.05)))
     }
 }

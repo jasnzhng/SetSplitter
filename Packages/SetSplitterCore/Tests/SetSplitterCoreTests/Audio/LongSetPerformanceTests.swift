@@ -38,6 +38,17 @@ struct LongSetPerformanceTests {
         print("LONGSET duration=\(Int(info.duration))s tracks=\(result.files.count) wall=\(elapsed) peakFootprint=\(String(format: "%.0f", mb)) MB")
         #expect(result.files.count == 40)
         #expect(mb < 200, "peak footprint \(mb) MB exceeds the 200 MB budget")
+
+        // Frame exactness at scale: every output decodes to its planned length, and the lengths
+        // sum to the source's frame count (counting frames only — no samples held in memory).
+        let plan = ExportPlanner().plan(tracks: tracks, source: info, leadIn: .includeInFirstTrack, albumTitle: "Long")
+        var decodedTotal: Int64 = 0
+        for (file, planned) in zip(result.files, plan.tracks) {
+            let frames = try await AudioTestSupport.frameCount(file)
+            #expect(frames == planned.frameCount, "\(file.lastPathComponent): decoded \(frames), planned \(planned.frameCount)")
+            decodedTotal += frames
+        }
+        #expect(decodedTotal == info.totalFrames, "outputs sum to \(decodedTotal), source is \(info.totalFrames)")
     }
 }
 
