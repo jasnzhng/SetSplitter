@@ -33,7 +33,10 @@ enum SnapshotRunner {
             for scenario in Scenario.allCases {
                 let model = AppModel(preferences: InMemoryPreferences())   // never touch the developer's real defaults
                 scenario.seed(model)
-                let window = makeWindow(model: model, appearance: appearance)
+                let root: AnyView = scenario == .turntableGallery
+                    ? AnyView(TurntableGallery().background(LivingBackdrop(palette: .resting(for: .importFile))))
+                    : AnyView(WizardView(model: model))
+                let window = makeWindow(root: root, appearance: appearance)
                 await settle()
                 write(window, to: directory.appendingPathComponent("\(scenario.rawValue)-\(name).png"))
                 window.orderOut(nil)   // not close(): that would trip terminate-after-last-window
@@ -44,11 +47,11 @@ enum SnapshotRunner {
 
     // MARK: Hosting
 
-    private static func makeWindow(model: AppModel, appearance: NSAppearance.Name) -> NSWindow {
+    private static func makeWindow(root: AnyView, appearance: NSAppearance.Name) -> NSWindow {
         let size = NSSize(width: 940, height: 660)
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
         window.appearance = NSAppearance(named: appearance)
-        let host = NSHostingView(rootView: WizardView(model: model))
+        let host = NSHostingView(rootView: root)
         host.frame = NSRect(origin: .zero, size: size)
         window.contentView = host
         window.orderBack(nil)   // in the window server but behind everything; needed for layout & appearance
@@ -80,6 +83,7 @@ enum SnapshotRunner {
         case exportRunning = "08-export-running"
         case exportDone = "09-export-done"
         case exportFailed = "10-export-failed"
+        case turntableGallery = "11-turntable-gallery"
 
         @MainActor
         func seed(_ model: AppModel) {
@@ -94,7 +98,7 @@ enum SnapshotRunner {
                 "06. [12:09](https://y.be) | Mauro Picotto & Eftihios - Like This, Like That W/ | John Summit ft. HAYLA - Where You Are (John Summit & Maddix Edit)",
                 "07. [14:57](https://y.be) | Danny Avila & Matt Sassari - Diamonds",
             ].joined(separator: " ")
-            if self != .importEmpty {
+            if self != .importEmpty, self != .turntableGallery {
                 let url = URL(fileURLWithPath: "/Users/dj/Music/Tomorrowland_2026_Mainstage.mp3")
                 store.source = SourceFile(
                     url: url,
@@ -103,7 +107,7 @@ enum SnapshotRunner {
                 store.albumTitle = "Tomorrowland 2026 Mainstage"
             }
             switch self {
-            case .importEmpty, .importLoaded: break
+            case .importEmpty, .importLoaded, .turntableGallery: break
             case .tracklistEmpty: store.step = .tracklist
             case .tracklistSample, .tracklistEdited:
                 store.step = .tracklist
@@ -137,6 +141,31 @@ enum SnapshotRunner {
                 }
             }
         }
+    }
+}
+
+/// Every record/tonearm state in one frame, for reviewing the art without driving the app.
+private struct TurntableGallery: View {
+    var body: some View {
+        let palette = ArtPalette.resting(for: .importFile)
+        VStack(spacing: 24) {
+            HStack(alignment: .top, spacing: 8) {
+                labelled("idle", Turntable(state: .idle, radius: 96, palette: palette))
+                labelled("targeted", Turntable(state: .targeted, radius: 96, palette: palette))
+                labelled("loaded", Turntable(state: .loaded, radius: 96, palette: palette, labelText: "2:00:00"))
+            }
+            HStack(alignment: .top, spacing: 8) {
+                labelled("export 0%", Turntable(state: .exporting(progress: 0), radius: 96, palette: palette, trackGaps: [0.2, 0.45, 0.7]))
+                labelled("export 50%", Turntable(state: .exporting(progress: 0.5), radius: 96, palette: palette, trackGaps: [0.2, 0.45, 0.7]))
+                labelled("export 100%", Turntable(state: .exporting(progress: 1), radius: 96, palette: palette, trackGaps: [0.2, 0.45, 0.7]))
+            }
+        }
+        .padding(24)
+        .frame(width: 940, height: 660)
+    }
+
+    private func labelled<V: View>(_ title: String, _ view: V) -> some View {
+        VStack(spacing: 6) { view; Text(title).font(.caption).foregroundStyle(.secondary) }
     }
 }
 

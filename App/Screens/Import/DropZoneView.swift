@@ -2,9 +2,11 @@
 //  DropZoneView.swift
 //  SetSplitter
 //
+//  The caption beneath the turntable while no file is loaded: what to do, what
+//  went wrong, and the Browse button. (The drop target itself is the whole page.)
+//
 
 import SwiftUI
-import SetSplitterCore
 
 struct DropZoneView: View {
 
@@ -13,22 +15,16 @@ struct DropZoneView: View {
     let onBrowse: () -> Void
 
     var body: some View {
-        VStack(spacing: 14) {
-            icon
-            VStack(spacing: 4) {
-                Text(headline)
-                    .font(.title3.weight(.medium))
-                if case .failed(let message) = phase {
-                    Text(message)
-                        .font(.callout)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text("or")
-                        .font(.callout)
-                        .foregroundStyle(.tertiary)
-                }
+        VStack(spacing: 10) {
+            Text(headline)
+                .font(.title3.weight(.medium))
+                .contentTransition(.opacity)
+            if case .failed(let message) = phase {
+                Text(message)
+                    .font(.callout)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if case .loading = phase {
                 ProgressView().controlSize(.small)
@@ -37,35 +33,15 @@ struct DropZoneView: View {
                     .controlSize(.large)
             }
         }
-        .padding(28)
+        .animation(Theme.quick, value: isTargeted)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(isTargeted ? Color.accentColor.opacity(0.10) : Color(nsColor: .controlBackgroundColor).opacity(0.6))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(
-                    isTargeted ? Color.accentColor : Color.secondary.opacity(0.35),
-                    style: StrokeStyle(lineWidth: isTargeted ? 2 : 1.25, dash: isTargeted ? [] : [7, 5]))
-        )
-        .scaleEffect(isTargeted ? 1.015 : 1)
-        .animation(Theme.smooth, value: isTargeted)
         .accessibilityElement(children: .contain)
-    }
-
-    private var icon: some View {
-        Image(systemName: "waveform")
-            .font(.system(size: 42, weight: .light))
-            .foregroundStyle(isTargeted ? Color.accentColor : Color.secondary)
-            .symbolEffect(.bounce, value: isTargeted)
-            .frame(height: 50)
     }
 
     private var headline: String {
         switch phase {
         case .loading(let name): "Reading “\(name)”…"
-        default: isTargeted ? "Release to import" : "Drop your \(SupportedAudio.displayName) here"
+        default: isTargeted ? "Drop to load the record" : "Drop your \(SupportedAudio.displayName) here"
         }
     }
 }

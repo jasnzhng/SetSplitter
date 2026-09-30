@@ -2,8 +2,9 @@
 //  ImportScreen.swift
 //  SetSplitter
 //
-//  Step 1: drop or browse for the long mix; on success, confirm what was
-//  read (duration, sample rate, channels) before enabling Continue.
+//  Step 1: drop or browse for the long mix. The screen is a turntable: dragging
+//  a file over it drops the tonearm; once the file is read the record spins and
+//  its label shows how long the set is.
 //
 
 import SwiftUI
@@ -17,36 +18,43 @@ struct ImportScreen: View {
     @State private var isTargeted = false
 
     var body: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 14) {
             VStack(spacing: 6) {
                 Text("Import your set")
-                    .font(.display(34))
+                    .font(.display(36))
                 Text("One long \(SupportedAudio.displayName) in, a gapless album out.")
                     .font(.title3)
                     .foregroundStyle(.secondary)
             }
 
+            Turntable(state: turntableState, radius: 118, palette: .resting(for: .importFile),
+                      labelText: store.source.map { TrackTiming.format($0.info.duration) })
+                .padding(.vertical, 4)
+
             ZStack {
                 if let source = store.source {
-                    LoadedFileCard(source: source, onReplace: { withAnimation(Theme.smooth) { model.clear() } })
-                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    LoadedFileCard(source: source, onReplace: { model.clear() })
+                        .transition(.opacity.combined(with: .offset(y: 8)))
                 } else {
                     DropZoneView(phase: model.phase, isTargeted: isTargeted, onBrowse: { Task { await model.browse() } })
-                        .transition(.opacity.combined(with: .scale(scale: 1.03)))
+                        .transition(.opacity.combined(with: .offset(y: 8)))
                 }
             }
             .frame(maxWidth: 520)
-            .frame(height: 260)
+            .frame(height: 120)
             .animation(Theme.smooth, value: store.source != nil)
-            .fileDropTarget(isTargeted: $isTargeted) { urls in
-                Task { _ = await model.handleDrop(urls) }
-            }
         }
         .padding(Theme.pagePadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .fileDropTarget(isTargeted: $isTargeted) { urls in
+            Task { _ = await model.handleDrop(urls) }
+        }
+    }
+
+    private var turntableState: Turntable.State {
+        if store.source != nil { return .loaded }
+        if case .loading = model.phase { return .loading }
+        return isTargeted ? .targeted : .idle
     }
 }
-
-// MARK: - Empty / dragging / loading / error states
-
-// MARK: - Loaded state
