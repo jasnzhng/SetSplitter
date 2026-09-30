@@ -8,6 +8,7 @@
 
 import Foundation
 import Observation
+import SwiftUI
 import SetSplitterCore
 
 @MainActor
@@ -168,7 +169,7 @@ final class SessionStore {
     /// the debounced `scheduleReparse()`.
     func reparse() {
         reparseTask?.cancel()
-        parseResult = parse()
+        withAnimation(Theme.smooth) { parseResult = parse() }
     }
 
     /// An empty tracklist is legal (§14: one track named after the album), so it
@@ -193,7 +194,7 @@ final class SessionStore {
         reparseTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(100))
             guard !Task.isCancelled, let self else { return }
-            self.parseResult = self.parse()
+            withAnimation(Theme.smooth) { self.parseResult = self.parse() }
         }
     }
 

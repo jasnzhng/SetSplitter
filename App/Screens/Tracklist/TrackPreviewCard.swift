@@ -53,6 +53,8 @@ struct TrackPreviewCard: View {
                 .strokeBorder(isHighlighted ? Color.accentColor.opacity(0.7) : Color(nsColor: .separatorColor).opacity(0.5),
                               lineWidth: isHighlighted ? 1.25 : 0.5)
         )
+        .scaleEffect(isHighlighted ? 1.012 : 1)
+        .shadow(color: .black.opacity(isHighlighted ? 0.18 : 0), radius: 8, y: 3)
         .animation(Theme.quick, value: isHighlighted)
         .contextMenu {
             if track.userEdited {
@@ -63,18 +65,14 @@ struct TrackPreviewCard: View {
         .accessibilityElement(children: .contain)   // keep the inline editors individually reachable
     }
 
-    /// Stand-in for cover art: a tile carrying the track number, with a small
-    /// accent dot when the text has been hand-edited.
+    /// A generated cover unique to this track (stable across launches), with the
+    /// track number in the corner and an accent dot when the text was hand-edited.
     private var numberTile: some View {
-        Text("\(track.index)")
-            .font(.system(size: 13, weight: .semibold).monospacedDigit())
-            .foregroundStyle(.secondary)
-            .frame(width: 34, height: 34)
-            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.primary.opacity(0.06)))
+        MiniCover(seed: "\(track.artist)|\(track.title)", size: 38, number: track.index)
             .overlay(alignment: .topTrailing) {
                 if track.userEdited {
-                    Circle().fill(Color.accentColor).frame(width: 8, height: 8)
-                        .overlay(Circle().strokeBorder(Color(nsColor: .controlBackgroundColor), lineWidth: 1.5))
+                    Circle().fill(Color.accentColor).frame(width: 9, height: 9)
+                        .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
                         .offset(x: 3, y: -3)
                         .help("Edited by hand")
                         .transition(.scale)

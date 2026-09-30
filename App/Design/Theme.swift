@@ -21,9 +21,10 @@ enum Theme {
 
 extension Font {
 
-    /// Editorial serif for headlines and big numerals: the liner-notes voice of the app.
+    /// Monospaced display face for headlines and big numerals: the studio-console / tracklist
+    /// voice of the app. (Every large piece of type goes through here, so the face is one edit.)
     static func display(_ size: CGFloat, weight: Font.Weight = .semibold) -> Font {
-        .system(size: size, weight: weight, design: .serif)
+        .system(size: size, weight: weight, design: .monospaced)
     }
 }
 

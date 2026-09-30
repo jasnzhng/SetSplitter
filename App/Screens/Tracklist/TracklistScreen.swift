@@ -126,7 +126,8 @@ private struct PreviewSection: View {
 
                 ScrollView {
                     LazyVStack(spacing: 6) {
-                        ForEach(Array(zip(store.tracks, store.durations)), id: \.0.start) { track, duration in
+                        ForEach(Array(zip(store.tracks, store.durations).enumerated()), id: \.element.0.start) { index, pair in
+                            let (track, duration) = pair
                             TrackPreviewCard(
                                 track: track, duration: duration,
                                 isHighlighted: model.highlightedStart == track.start,
@@ -137,6 +138,9 @@ private struct PreviewSection: View {
                                     if inside { model.highlightedStart = track.start }
                                     else if model.highlightedStart == track.start { model.highlightedStart = nil }
                                 }
+                                // New cards rise in one after another, like sleeves being dealt onto a table.
+                                .transition(.opacity.combined(with: .offset(y: 14))
+                                    .animation(.smooth(duration: 0.4).delay(Double(min(index, 10)) * 0.045)))
                         }
                     }
                     .padding(.vertical, 2)

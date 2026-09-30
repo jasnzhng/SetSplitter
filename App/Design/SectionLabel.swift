@@ -12,7 +12,7 @@ struct SectionLabel: View {
 
     var body: some View {
         Text(text)
-            .font(.caption.weight(.semibold))
+            .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
             .textCase(.uppercase)
             .tracking(0.6)
             .foregroundStyle(.secondary)
