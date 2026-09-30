@@ -176,7 +176,7 @@ public struct AVFoundationAudioSplitter: AudioSplitting {
 }
 
 /// Rate-limits progress callbacks to ~10 Hz. Only touched from the split loop.
-private final class ProgressThrottle: @unchecked Sendable {
+private final class ProgressThrottle {
     private let interval: Duration
     private var last: ContinuousClock.Instant?
     init(interval: Duration) { self.interval = interval }

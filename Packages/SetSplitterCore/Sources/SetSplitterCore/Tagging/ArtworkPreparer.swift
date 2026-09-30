@@ -15,7 +15,7 @@ import UniformTypeIdentifiers
 /// Prepared artwork plus anything the UI should mention.
 public struct PreparedArtwork: Sendable, Equatable {
 
-    public enum Notice: Sendable, Equatable {
+    public enum Notice: Sendable, Hashable {
         /// The image wasn't square and was center-cropped.
         case croppedToSquare
         /// Shorter side under 300 px; Music will show it soft.

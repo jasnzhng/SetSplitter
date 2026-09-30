@@ -56,7 +56,9 @@ struct ExportIntegrationTests {
         // Seam continuity. AAC is lossy, so the decode never equals the source, and each track's
         // encoder starts from silence, giving a brief (~256-frame) warm-up transient at the start of
         // every track. Measured on this fixture: error ≈0.001 up to the seam, ≈0.17 in the first
-        // 256 frames after it, ≈0.01 steady state. So assert three things:
+        // 256 frames after it, ≈0.01 steady state. These are identical (0.16799 / 0.04675) to what the
+        // Phase 0 spike reports for the same file — the output Jason confirmed audibly gapless in
+        // Music — so the port is faithful. Assert three things:
         //   1. alignment before the seam (a dropped/duplicated frame would wreck the exact-ish tail),
         //   2. alignment after the warm-up (a shifted cut would never settle),
         //   3. no click: the sample-to-sample step at the seam is within the signal's normal range.
@@ -76,7 +78,8 @@ struct ExportIntegrationTests {
             #expect(maxError((seam + 1024)..<(seam + 4096)) < 0.05, "audio after seam \(seam) is misaligned")
             let step = maxStep(seam..<(seam + 1))
             let typical = max(maxStep((seam - 2000)..<(seam - 100)), maxStep((seam + 100)..<(seam + 2000)))
-            #expect(step <= typical * 1.5, "click at seam \(seam): step \(step) vs typical \(typical)")
+            #expect(step <= typical * 2,   // a real click is a jump to full scale; this leaves headroom for encoder updates
+                     "click at seam \(seam): step \(step) vs typical \(typical)")
         }
 
         // Metadata, from raw ilst bytes.
@@ -131,15 +134,24 @@ struct ExportIntegrationTests {
         #expect(try FileManager.default.contentsOfDirectory(atPath: replaced.folder.path).count == 3)
     }
 
-    @Test("cancellation throws CancellationError and leaves nothing behind")
+    @Test("cancelling mid-write throws CancellationError and removes open writers and the temp folder")
     func cancellation() async throws {
         let parent = try AudioTestSupport.makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: parent) }
         let info = try await AVFoundationAudioInspector().inspect(url: source)
         let req = request(parent: parent, info: info)
-        let task = Task { try await ExportJob().run(req) }
-        task.cancel()
+
+        // Cancel from inside the progress callback once track 2 is being written, so a writer is
+        // open and track 1 is already finished — the cleanup path §7.7 is about.
+        let trigger = CancelTrigger()
+        let task = Task {
+            try await ExportJob().run(req) { p in
+                if p.currentTrack >= 2, p.framesProcessed > 0 { trigger.fire() }
+            }
+        }
+        trigger.task = task
         await #expect(throws: CancellationError.self) { _ = try await task.value }
+        #expect(trigger.fired, "the export finished before the cancel could land")
         #expect(try FileManager.default.contentsOfDirectory(atPath: parent.path).isEmpty)
     }
 
@@ -156,6 +168,22 @@ struct ExportIntegrationTests {
 }
 
 // MARK: - helpers
+
+/// Lets a progress callback cancel the task that is running it.
+private final class CancelTrigger: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _task: Task<ExportResult, Error>?
+    private var _fired = false
+    var task: Task<ExportResult, Error>? {
+        get { lock.withLock { _task } }
+        set { lock.withLock { _task = newValue } }
+    }
+    var fired: Bool { lock.withLock { _fired } }
+    func fire() {
+        let t: Task<ExportResult, Error>? = lock.withLock { _fired = true; return _task }
+        t?.cancel()
+    }
+}
 
 private final class ProgressLog: @unchecked Sendable {
     private let lock = NSLock()

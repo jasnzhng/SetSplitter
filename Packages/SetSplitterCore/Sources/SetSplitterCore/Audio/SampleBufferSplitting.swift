@@ -14,6 +14,7 @@ enum SampleSplitError: Error, LocalizedError {
     case missingFormatDescription
     case missingDataBuffer
     case notInterleavedFloat
+    case splitPointOutsideBuffer
     case blockBufferCreateFailed(OSStatus)
     case sampleBufferCreateFailed(OSStatus)
     case retimeFailed(OSStatus)
@@ -23,13 +24,10 @@ enum SampleSplitError: Error, LocalizedError {
     }
 }
 
-/// Result of trying to cut a buffer at a frame index.
+/// The two halves of a buffer cut at a frame index.
 struct SplitOutcome {
     let head: CMSampleBuffer
     let tail: CMSampleBuffer
-    /// True when the CoreMedia API path (`CMSampleBufferCopySampleBufferForRange`) failed and
-    /// manual `CMBlockBuffer` slicing was used instead. Recorded for the §13 Q4 finding.
-    let usedManualPath: Bool
 }
 
 enum SampleBufferSplitting {
@@ -37,7 +35,7 @@ enum SampleBufferSplitting {
     /// Prefers `CMSampleBufferCopySampleBufferForRange`; falls back to manual slicing.
     static func split(_ buffer: CMSampleBuffer, headFrames: Int) throws -> SplitOutcome {
         let total = CMSampleBufferGetNumSamples(buffer)
-        guard headFrames > 0, headFrames < total else { throw SampleSplitError.missingDataBuffer }
+        guard headFrames > 0, headFrames < total else { throw SampleSplitError.splitPointOutsideBuffer }
 
         var head: CMSampleBuffer?
         var tail: CMSampleBuffer?
@@ -49,11 +47,11 @@ enum SampleBufferSplitting {
             sampleRange: CFRange(location: headFrames, length: total - headFrames), sampleBufferOut: &tail)
 
         if s1 == noErr, s2 == noErr, let h = head, let t = tail {
-            return SplitOutcome(head: h, tail: t, usedManualPath: false)
+            return SplitOutcome(head: h, tail: t)
         }
 
         let manual = try manualSplit(buffer, headFrames: headFrames, totalFrames: total)
-        return SplitOutcome(head: manual.0, tail: manual.1, usedManualPath: true)
+        return SplitOutcome(head: manual.0, tail: manual.1)
     }
 
     // MARK: Manual path
@@ -85,7 +83,7 @@ enum SampleBufferSplitting {
 
         let headBytes = headFrames * bytesPerFrame
         let tailBytes = (totalFrames - headFrames) * bytesPerFrame
-        guard headBytes + tailBytes <= totalLength else { throw SampleSplitError.missingDataBuffer }
+        guard headBytes + tailBytes <= totalLength else { throw SampleSplitError.splitPointOutsideBuffer }
 
         let head = try makeBuffer(from: base, offset: 0, byteCount: headBytes,
                                   frames: headFrames, formatDesc: formatDesc, sampleRate: asbd.mSampleRate,

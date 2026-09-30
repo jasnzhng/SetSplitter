@@ -8,7 +8,7 @@ CONFIG       := Debug
 CORE_PKG     := Packages/SetSplitterCore
 DERIVED_DATA := .build/DerivedData
 
-.PHONY: gen build test run clean
+.PHONY: gen build build-signed test run snapshots clean
 
 gen:
 	xcodegen generate
@@ -21,8 +21,19 @@ build: gen
 test:
 	cd $(CORE_PKG) && swift test
 
-run: build
+# Ad-hoc *signed* build: unlike `build`, the entitlements apply, so the App
+# Sandbox is really on. Use this (not `build`) when checking file access.
+build-signed: gen
+	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES build
+
+run: build-signed
 	open $(DERIVED_DATA)/Build/Products/$(CONFIG)/$(SCHEME).app
+
+# Render every wizard state to PNGs (light + dark) headlessly; see App/Debug/SnapshotRunner.swift.
+snapshots: build
+	$(DERIVED_DATA)/Build/Products/$(CONFIG)/$(SCHEME).app/Contents/MacOS/$(SCHEME) --snapshot $(or $(OUT),.build/snapshots)
 
 clean:
 	rm -rf $(DERIVED_DATA) $(PROJECT)
