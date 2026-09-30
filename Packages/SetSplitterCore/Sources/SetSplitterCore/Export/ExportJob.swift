@@ -13,10 +13,19 @@ public struct ExportJob: Sendable {
 
     private let splitter: any AudioSplitting
     private let planner: ExportPlanner
+    private let discardReplaced: @Sendable (URL) -> Void
 
-    public init(splitter: any AudioSplitting = AVFoundationAudioSplitter(), planner: ExportPlanner = ExportPlanner()) {
+    /// - Parameter discardReplaced: Disposes of an album that `.replace` displaced.
+    ///   Defaults to moving it to the Trash; tests inject a plain delete so they don't
+    ///   litter the developer's Trash.
+    public init(
+        splitter: any AudioSplitting = AVFoundationAudioSplitter(),
+        planner: ExportPlanner = ExportPlanner(),
+        discardReplaced: @escaping @Sendable (URL) -> Void = { try? FileManager.default.trashItem(at: $0, resultingItemURL: nil) }
+    ) {
         self.splitter = splitter
         self.planner = planner
+        self.discardReplaced = discardReplaced
     }
 
     /// The folder `request` will be written to, after applying the
@@ -85,7 +94,9 @@ public struct ExportJob: Sendable {
         // place, so a failed move can put it back instead of losing both.
         var displaced: URL?
         if fm.fileExists(atPath: final.path) {
-            let aside = settings.outputDirectory.appendingPathComponent(".SetSplitter-old-\(UUID().uuidString)", isDirectory: true)
+            // A *visible* name: it ends up in the Trash, where a dot-name would be hidden, and it
+            // must never match the `.SetSplitter-` prefix the abandoned-temp sweep deletes.
+            let aside = Self.freeName("\(final.lastPathComponent) (replaced)", in: settings.outputDirectory)
             do { try fm.moveItem(at: final, to: aside) } catch {
                 throw ExportError.cannotCreateFolder("The existing folder couldn't be replaced. \(error.localizedDescription)")
             }
@@ -96,7 +107,7 @@ public struct ExportJob: Sendable {
             throw ExportError.cannotCreateFolder(error.localizedDescription)
         }
         succeeded = true
-        if let displaced { Self.discard(displaced, keptAs: final) }
+        if let displaced { discardReplaced(displaced) }
 
         let moved = { (u: URL) in final.appendingPathComponent(u.lastPathComponent) }
         progress(ExportProgress(
@@ -106,14 +117,15 @@ public struct ExportJob: Sendable {
         return ExportResult(folder: final, files: files.map(moved), coverURL: cover.map(moved), warnings: plan.warnings)
     }
 
-    /// Trashes the replaced album; if the Trash refuses, keeps it visibly as
-    /// "<name> (replaced)" rather than leaving a hidden folder of the user's audio behind.
-    private static func discard(_ url: URL, keptAs final: URL) {
-        let fm = FileManager.default
-        if (try? fm.trashItem(at: url, resultingItemURL: nil)) != nil { return }
-        let visible = final.deletingLastPathComponent()
-            .appendingPathComponent("\(final.lastPathComponent) (replaced)", isDirectory: true)
-        try? fm.moveItem(at: url, to: visible)
+    /// `name`, or `name 2`, `name 3`, … — the first folder name not already present in `directory`.
+    private static func freeName(_ name: String, in directory: URL) -> URL {
+        var candidate = directory.appendingPathComponent(name, isDirectory: true)
+        var n = 2
+        while FileManager.default.fileExists(atPath: candidate.path) {
+            candidate = directory.appendingPathComponent("\(name) \(n)", isDirectory: true)
+            n += 1
+        }
+        return candidate
     }
 
     /// A crash or force-quit mid-export leaves a hidden `.SetSplitter-<uuid>` folder full of

@@ -59,10 +59,16 @@ struct WizardView: View {
         let isCurrent = store.step == step
         return content()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .offset(x: CGFloat(step.rawValue - store.step.rawValue) * width * 0.35)
+            // A full page-width apart, so off-screen pages sit entirely outside the window: AppKit
+            // routes drags by view frame, and a parallax overlap would let an invisible page's
+            // NSTextView swallow file drops meant for the visible one.
+            .offset(x: CGFloat(step.rawValue - store.step.rawValue) * width)
             .opacity(isCurrent ? 1 : 0)
             .blur(radius: isCurrent ? 0 : 6)
             .allowsHitTesting(isCurrent)
+            // `allowsHitTesting` doesn't stop AppKit-backed views: an off-screen TextEditor's
+            // NSTextView would still claim file drops meant for the visible page.
+            .disabled(!isCurrent)
             .accessibilityHidden(!isCurrent)
             .animation(Theme.smooth, value: store.step)
     }

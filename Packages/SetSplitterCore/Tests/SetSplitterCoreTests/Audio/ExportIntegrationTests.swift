@@ -129,7 +129,11 @@ struct ExportIntegrationTests {
         let both = try await ExportJob().run(request(parent: parent, info: info, starts: [0, 10], policy: .keepBoth))
         #expect(both.folder.lastPathComponent == "DJ Test - Test Set (2)")
 
-        let replaced = try await ExportJob().run(request(parent: parent, info: info, starts: [0, 10, 20], policy: .replace))
+        // Inject a plain delete for the displaced album so the test never litters the real Trash.
+        let displaced = DisplacedLog()
+        let job = ExportJob(discardReplaced: { url in displaced.add(url); try? FileManager.default.removeItem(at: url) })
+        let replaced = try await job.run(request(parent: parent, info: info, starts: [0, 10, 20], policy: .replace))
+        #expect(displaced.all.map(\.lastPathComponent) == ["DJ Test - Test Set (replaced)"], "old album is set aside under a visible name")
         #expect(replaced.folder.lastPathComponent == "DJ Test - Test Set")
         #expect(try FileManager.default.contentsOfDirectory(atPath: replaced.folder.path).count == 3)
     }
@@ -202,6 +206,13 @@ private final class CancelTrigger: @unchecked Sendable {
         let t: Task<ExportResult, Error>? = lock.withLock { _fired = true; return _task }
         t?.cancel()
     }
+}
+
+private final class DisplacedLog: @unchecked Sendable {
+    private let lock = NSLock()
+    private var urls: [URL] = []
+    func add(_ url: URL) { lock.withLock { urls.append(url) } }
+    var all: [URL] { lock.withLock { urls } }
 }
 
 private final class ProgressLog: @unchecked Sendable {

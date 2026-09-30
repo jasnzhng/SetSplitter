@@ -37,11 +37,10 @@ struct ArtworkPicker: View {
             }
             .aspectRatio(1, contentMode: .fit)
             .animation(Theme.smooth, value: store.artwork?.jpeg.count)
-            .dropDestination(for: URL.self) { urls, _ in
-                guard let url = urls.first else { return false }
+            .fileDropTarget(isTargeted: $isTargeted) { urls in
+                guard let url = urls.first else { return }
                 Task { await model.loadArtwork(from: url) }
-                return true
-            } isTargeted: { isTargeted = $0 }
+            }
             .accessibilityElement(children: .contain)
 
             if let art = store.artwork {

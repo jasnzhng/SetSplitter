@@ -38,10 +38,9 @@ struct ImportScreen: View {
             .frame(maxWidth: 520)
             .frame(height: 260)
             .animation(Theme.smooth, value: store.source != nil)
-            .dropDestination(for: URL.self) { urls, _ in
+            .fileDropTarget(isTargeted: $isTargeted) { urls in
                 Task { _ = await model.handleDrop(urls) }
-                return true
-            } isTargeted: { isTargeted = $0 }
+            }
         }
         .padding(Theme.pagePadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
