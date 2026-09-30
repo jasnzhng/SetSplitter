@@ -69,28 +69,39 @@ struct CoverDesignControls: View {
 
     // MARK: Text
 
+    /// Label column shared by every row in the group, wide enough for "Lines" / "Place" without wrapping.
+    private static let labelWidth: CGFloat = 48
+
     private var textControls: some View {
         @Bindable var store = store
         return DisclosureGroup("Text", isExpanded: $isTextExpanded) {
             VStack(alignment: .leading, spacing: 10) {
-                slider("Size", value: $store.cover.text.size, range: CoverTextStyle.sizeRange)
-                slider("Lines", value: $store.cover.text.lineSpacing, range: CoverTextStyle.lineSpacingRange)
-
-                Picker("Align", selection: $store.cover.text.alignment) {
-                    Image(systemName: "text.alignleft").tag(CoverTextStyle.Alignment.leading)
-                    Image(systemName: "text.aligncenter").tag(CoverTextStyle.Alignment.center)
-                    Image(systemName: "text.alignright").tag(CoverTextStyle.Alignment.trailing)
+                row("Size") {
+                    Slider(value: $store.cover.text.size, in: CoverTextStyle.sizeRange)
                 }
-                .pickerStyle(.segmented)
-                .help("Align the title left, centre or right.")
-
-                Picker("Place", selection: $store.cover.text.position) {
-                    Text("Top").tag(CoverTextStyle.Position.top)
-                    Text("Middle").tag(CoverTextStyle.Position.middle)
-                    Text("Bottom").tag(CoverTextStyle.Position.bottom)
+                row("Lines") {
+                    Slider(value: $store.cover.text.lineSpacing, in: CoverTextStyle.lineSpacingRange)
                 }
-                .pickerStyle(.segmented)
-                .help("Where the title sits on the cover.")
+                row("Align") {
+                    Picker("Align", selection: $store.cover.text.alignment) {
+                        Image(systemName: "text.alignleft").tag(CoverTextStyle.Alignment.leading)
+                        Image(systemName: "text.aligncenter").tag(CoverTextStyle.Alignment.center)
+                        Image(systemName: "text.alignright").tag(CoverTextStyle.Alignment.trailing)
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .help("Align the title left, centre or right.")
+                }
+                row("Place") {
+                    Picker("Place", selection: $store.cover.text.position) {
+                        Text("Top").tag(CoverTextStyle.Position.top)
+                        Text("Middle").tag(CoverTextStyle.Position.middle)
+                        Text("Bottom").tag(CoverTextStyle.Position.bottom)
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .help("Where the title sits on the cover.")
+                }
 
                 HStack {
                     Toggle("Shadow", isOn: $store.cover.text.shadow)
@@ -101,19 +112,21 @@ struct CoverDesignControls: View {
                         .buttonStyle(.link)
                         .disabled(store.cover.text == CoverTextStyle())
                 }
-                .font(.callout)
             }
+            .font(.callout)
             .padding(.top, 8)
         }
         .font(.callout)
     }
 
-    private func slider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
+    /// A label in a fixed column (never wrapped) with its control filling the rest of the row.
+    private func row<Control: View>(_ title: String, @ViewBuilder _ control: () -> Control) -> some View {
         HStack(spacing: 8) {
-            Text(title).frame(width: 40, alignment: .leading)
-            Slider(value: value, in: range)
-                .controlSize(.small)
+            Text(title)
+                .lineLimit(1)
+                .frame(width: Self.labelWidth, alignment: .leading)
+            control()
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .font(.callout)
     }
 }

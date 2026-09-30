@@ -9,7 +9,15 @@ import SwiftUI
 struct SetSplitterApp: App {
 
     @NSApplicationDelegateAdaptor private var delegate: AppDelegate
-    @State private var model = AppModel()
+    @State private var model: AppModel
+
+    init() {
+        #if DEBUG
+        _model = State(initialValue: SnapshotRunner.launchModel(from: CommandLine.arguments) ?? AppModel())
+        #else
+        _model = State(initialValue: AppModel())
+        #endif
+    }
 
     var body: some Scene {
         // Single-window wizard — `Window`, not `WindowGroup`, so ⌘N can't spawn

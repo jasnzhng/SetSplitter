@@ -25,6 +25,16 @@ enum SnapshotRunner {
         return URL(fileURLWithPath: arguments[i + 1], isDirectory: true)
     }
 
+    /// `--scenario tracklist-sample` opens the *real* window already in that seeded state (any suffix of a
+    /// `Scenario` raw value works), for checking things the offscreen renderer can't draw: blur, glass, hover.
+    static func launchModel(from arguments: [String]) -> AppModel? {
+        guard let i = arguments.firstIndex(of: "--scenario"), i + 1 < arguments.count,
+              let scenario = Scenario.allCases.first(where: { $0.rawValue.hasSuffix(arguments[i + 1]) }) else { return nil }
+        let model = AppModel(preferences: InMemoryPreferences())
+        scenario.seed(model)
+        return model
+    }
+
     static func run(into directory: URL) async {
         do { try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true) } catch {
             print("snapshot: can't create \(directory.path): \(error)"); NSApp.terminate(nil); return

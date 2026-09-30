@@ -108,6 +108,7 @@ private struct PreviewSection: View {
 
     @Bindable var model: TracklistViewModel   // needs `$model.highlightedStart`
     @Environment(SessionStore.self) private var store
+    @State private var hasMoreBelow = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -146,16 +147,21 @@ private struct PreviewSection: View {
                                     if inside { model.highlightedStart = track.start }
                                     else if model.highlightedStart == track.start { model.highlightedStart = nil }
                                 }
+                                .blursWhenCutOffAtBottom(active: hasMoreBelow)
                                 // New cards rise in one after another, like sleeves being dealt onto a table.
                                 .transition(.opacity.combined(with: .offset(y: 14))
                                     .animation(.smooth(duration: 0.4).delay(Double(min(index, 10)) * 0.045)))
                         }
                     }
-                    .padding(.vertical, 2)
-                    .padding(.trailing, 2)
+                    // Room inside the clip for a hovered card's scale-up and shadow, so they aren't cut off…
+                    .padding(.horizontal, Self.hoverRoom)
+                    .padding(.vertical, 4)
                 }
+                .reportsMoreContentBelow($hasMoreBelow)
+                // …handed back outside it, so the cards still line up with the strip above.
+                .padding(.horizontal, -Self.hoverRoom)
+                .padding(.vertical, -4)
                 .scrollIndicators(.automatic)
-                .moreBelowBlur()
                 .frame(maxHeight: .infinity)
             }
 
@@ -164,6 +170,9 @@ private struct PreviewSection: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .animation(Theme.smooth, value: store.tracks.isEmpty)
     }
+
+    /// Points of slack around the card list, enough for the hover shadow (radius 8) and scale-up.
+    private static let hoverRoom: CGFloat = 12
 
     private var emptyState: some View {
         VStack(spacing: 8) {

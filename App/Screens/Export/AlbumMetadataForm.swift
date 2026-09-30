@@ -23,8 +23,8 @@ struct AlbumMetadataForm: View {
                 requiredField("Album Artist", text: $store.albumArtist,
                               help: "Groups every track into one album in Music.")
                 yearField
-                TextField("Genre", text: $store.genre)
-                TextField("Comment", text: $store.comment, prompt: Text("Optional"))
+                fieldRow("Genre", text: $store.genre)
+                fieldRow("Comment", text: $store.comment, prompt: "Optional")
             } header: {
                 Text("Album")
             }
@@ -47,38 +47,47 @@ struct AlbumMetadataForm: View {
 
     // MARK: Rows
 
+    /// Width of the label column, so every field's text starts at the same left edge.
+    private static let labelWidth: CGFloat = 96
+
+    /// One labelled text field. Its text is leading-aligned on purpose: AppKit doesn't lay out
+    /// *trailing* whitespace in right-aligned text (a typed space stays invisible, and the caret
+    /// doesn't move, until the next character), so a right-aligned field can't show "Chris " properly.
+    private func fieldRow<Accessory: View>(
+        _ title: String, text: Binding<String>, prompt: String? = nil, labelColor: Color = .primary,
+        @ViewBuilder accessory: () -> Accessory = { EmptyView() }
+    ) -> some View {
+        HStack(spacing: 12) {
+            Text(title)
+                .foregroundStyle(labelColor)
+                .frame(width: Self.labelWidth, alignment: .leading)
+            TextField(title, text: text, prompt: prompt.map { Text($0) })
+                .labelsHidden()
+                .textFieldStyle(.plain)
+                .multilineTextAlignment(.leading)
+            accessory()
+        }
+    }
+
     private var yearField: some View {
         @Bindable var store = store
-        return LabeledContent {
-            HStack(spacing: 6) {
-                TextField("Year", text: $store.yearText, prompt: Text("Optional"))
-                    .labelsHidden()
-                    .multilineTextAlignment(.trailing)
-                if !store.yearIsValid {
-                    Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
-                        .help("Enter a four-digit year, or leave it empty.")
-                }
+        return fieldRow("Year", text: $store.yearText, prompt: "Optional",
+                        labelColor: store.yearIsValid ? .primary : .red) {
+            if !store.yearIsValid {
+                Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
+                    .help("Enter a four-digit year, or leave it empty.")
             }
-        } label: {
-            Text("Year").foregroundStyle(store.yearIsValid ? Color.primary : Color.red)
         }
         .animation(Theme.quick, value: store.yearIsValid)
     }
 
     private func requiredField(_ title: String, text: Binding<String>, help: String) -> some View {
         let isMissing = model.showsValidation && text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        return LabeledContent {
-            HStack(spacing: 6) {
-                TextField(title, text: text, prompt: Text("Required"))
-                    .labelsHidden()
-                    .multilineTextAlignment(.trailing)
-                if isMissing {
-                    Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
-                        .transition(.scale.combined(with: .opacity))
-                }
+        return fieldRow(title, text: text, prompt: "Required", labelColor: isMissing ? .red : .primary) {
+            if isMissing {
+                Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
+                    .transition(.scale.combined(with: .opacity))
             }
-        } label: {
-            Text(title).foregroundStyle(isMissing ? Color.red : Color.primary)
         }
         .help(help)
         .animation(Theme.quick, value: isMissing)

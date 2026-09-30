@@ -50,9 +50,10 @@ struct ExportStage: View {
     /// Left edge of the right-hand column (clear of the tonearm's reach).
     private let columnX: CGFloat = 340
     private let columnWidth: CGFloat = 400
-    /// Width of the working text (percentage, track, title, Cancel), narrower than the column
-    /// so the finished summary has room to breathe.
-    private let workingWidth: CGFloat = 300
+    /// Width of the working text (percentage, track, title, Cancel). This is what the record + text group is
+    /// centred on, so it must match how wide the text really is (a 76 pt "100%" is ~180 pt, the track line
+    /// ~150 pt), not a generous guess; long titles wrap and truncate inside it.
+    private let workingWidth: CGFloat = 190
     /// While working, the whole scene shifts right by this much so record + text are centred as one
     /// group; it eases back to 0 as the finale settles into the finished layout.
     private var workingInset: CGFloat { (columnWidth - workingWidth) / 2 }
