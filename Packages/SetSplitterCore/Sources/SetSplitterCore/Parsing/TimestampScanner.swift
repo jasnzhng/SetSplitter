@@ -45,7 +45,8 @@ struct TimestampScanner {
             let upper = cleaned.distance(from: cleaned.startIndex, to: match.range.upperBound)
             guard hasWordishBoundaries(chars, start: lower, end: upper) else { continue }
             guard let ts = Timestamp(text: String(match.output)) else { continue }
-            hits.append((lower, upper, ts))
+            let (from, to) = includingWrapper(chars, start: lower, end: upper)
+            hits.append((from, to, ts))
         }
 
         guard !hits.isEmpty else { return [] }
@@ -68,6 +69,19 @@ struct TimestampScanner {
             " \(match.output.1) "
         }
         return delinked.replacing(bareURLPattern, with: " ")
+    }
+
+    /// Widens a timestamp match to swallow a directly enclosing `[…]` or `(…)`
+    /// pair, so `[00:28]` is consumed whole. Without this the opener is left on
+    /// the end of the previous segment and the closer on the front of this one,
+    /// which unbalances every bracket-depth check downstream. Only a matching
+    /// pair counts — a lone `[` or `]` next to a timestamp is left alone.
+    private func includingWrapper(_ chars: [Character], start: Int, end: Int) -> (Int, Int) {
+        guard start > 0, end < chars.count else { return (start, end) }
+        switch (chars[start - 1], chars[end]) {
+        case ("[", "]"), ("(", ")"): return (start - 1, end + 1)
+        default: return (start, end)
+        }
     }
 
     /// A timestamp token must not butt up against a letter or digit: `2:00PM`

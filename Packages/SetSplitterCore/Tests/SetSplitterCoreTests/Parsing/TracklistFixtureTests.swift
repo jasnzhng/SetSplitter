@@ -24,7 +24,7 @@ struct TracklistFixtureTests {
     /// pass). Bump this when adding a fixture.
     @Test("the §9 fixture corpus is present")
     func corpusIsLoaded() {
-        #expect(TracklistFixture.all.count == 12, "expected 12 fixtures, loaded \(TracklistFixture.all.count)")
+        #expect(TracklistFixture.all.count == 13, "expected 13 fixtures, loaded \(TracklistFixture.all.count)")
     }
 
     @Test("fixture round-trips", arguments: TracklistFixture.all)
