@@ -1,61 +1,28 @@
 # SetSplitter
 
-A local macOS app that splits one long DJ-set recording (MP3, M4A or WAV) into a folder of individual,
-gaplessly-playable `.m4a` (AAC 256) tracks with full metadata and shared album
-artwork — ready to drag into Apple Music as a single continuous album.
+A super simple, local macOS app that splits one long recording (MP3, M4A or WAV) into a folder of individual, gaplessly-playable `.m4a` (AAC 256) tracks with full metadata and album artwork, ready to import into Apple Music or your music app of choice. 
 
-Three-screen wizard: **Import** (drop the MP3, M4A or WAV) → **Tracklist** (paste text, tune
-parse options, preview and hand-fix tracks) → **Export** (artwork, album metadata,
-output folder, run).
+1. Drag in your set
+2. Paste in a setlist- the app automatically picks up on timestamps and delimiters between song and artist name
+4. Use the app to make album art or drop in your own
+5. Export your set as a nicely formatted album! 
 
-## Using it
+I built this as a weekend project for myself since I love listening to live music, updates to come!
 
-1. **Import** — drop an MP3, M4A or WAV on the window (or `⌘O`). The app reads its duration,
-   sample rate and channels to confirm it's a valid file.
-2. **Tracklist** — paste the tracklist in any layout (even one long line); the only
-   requirement is timestamps like `0:00` or `1:02:03`. Cards preview each track live.
-   Click a title or artist to fix it by hand; edits survive re-parsing. Options
-   control artist/title order, separators, mashup handling and the audio before the
-   first timestamp.
-3. **Export** — add cover art (optional), fill in **Album** and **Album Artist**
-   (required — the album artist is what makes Music group the tracks), pick a
-   folder, and export. Then in Music: **File ▸ Add to Library…** and choose the
-   folder. The tracks appear as one album and play without gaps.
+## Roadmap + features to come
+- Currently you're only able to adjust the timestamps via editing the setlist text, currently working on a more fleshed out editor that allows you to preview splits between tracks and adjust using a timeline
+- Improvements to the artwork creator- more fonts, better positioning, ability to add a festival logo, more templates (akin to the Apple Music playlist cover maker)
+- Automatic import into Apple Music
+- Better integration and optimization with iCloud Library Sync and iTunes Match, so songs after import have richer data
+- Integration with 1001Tracklists to automatically search for and grab tracklists
+- Saving sets to a library in the app so users can go back and make edits
 
-Shortcuts: `⌘O` open file · `⌘[` back · `⌘↩` continue / export.
-
-## Build
-
-Requires macOS 26+ and Xcode 26+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen)
-(`brew install xcodegen`).
-
-```
-make gen           # regenerate SetSplitter.xcodeproj from project.yml
-make build         # build the app (unsigned; CI-style)
-make build-signed  # ad-hoc signed build — the App Sandbox is really on
-make run           # build-signed + launch
-make test          # run the core-package tests
-make snapshots     # render every screen state to PNGs (light + dark), headlessly
-make clean
-```
-
-`SetSplitter.xcodeproj` is generated and git-ignored — never hand-edit it; edit
-`project.yml` and run `make gen`.
-
-Long-file performance check (opt-in, needs a 2 h MP3):
-
-```
-SETSPLITTER_LONG_FILE=/path/to/two-hour.mp3 swift test -c release --filter LongSet
-```
-
-## Layout
-
-- `Packages/SetSplitterCore/` — all logic (parser, audio splitting, tagging, export
-  planning), no SwiftUI/AppKit, tested headlessly with `swift test`.
-- `App/` — thin SwiftUI shell: `Navigation/` (session store), `Screens/`,
-  `Components/`, `Services/`, `Design/`, `Debug/` (DEBUG-only snapshot harness).
-- `Tools/make-icon.swift` — regenerates the app icon (`swift Tools/make-icon.swift …`).
-- `Spikes/SplitSpike/` — throwaway Phase 0 feasibility spike (see its README).
-
-See [`implementation.md`](implementation.md) for the spec, [`CLAUDE.md`](CLAUDE.md)
-for conventions and settled decisions, and [`progress.md`](progress.md) for history.
+## Tech Stack
+- Swift 6, targeting macOS 26
+- SwiftUI for the UI, with Observation (@Observable) for state
+- AppKit for the open panel and drag-and-drop
+- AVFoundation (AVAssetReader / AVAssetWriter) to decode the source and encode AAC .m4a tracks with iTunes metadata
+- CoreMedia for sample-buffer splitting, and AudioToolbox for audio format handling
+- ImageIO, CoreGraphics, Core Image and Core Text for artwork
+- UniformTypeIdentifiers for file type handling
+- [XcodeGen](https://github.com/yonaskolb/xcodegen) and Swift Package Manager for the build
