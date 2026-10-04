@@ -2,7 +2,7 @@
 //  Timestamp.swift
 //  SetSplitterCore
 //
-//  implementation.md §4, §5.1. A position in the source audio, in seconds.
+//  A position in the source audio, in seconds.
 //  Two-segment timestamps are always mm:ss (never h:mm); three-segment are
 //  h:mm:ss. The parser is timestamp-anchored: every Timestamp the scanner
 //  emits becomes the start of exactly one track.

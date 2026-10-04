@@ -1,12 +1,12 @@
 import Testing
 @testable import SetSplitterCore
 
-/// implementation.md §5 worked-examples table. Each row asserts the structured
+/// The worked-examples table. Each row asserts the structured
 /// `artists` / `titles` arrays (never the joined strings). Rows that contain a
 /// `W/` join exercise EntrySplitter + CreditParser + TrackAssembler, so every
 /// row is checked through the real per-segment path (a `0:00` prefix + the
 /// public parser) rather than `CreditParser` in isolation.
-@Suite("CreditParser — §5 worked examples")
+@Suite("CreditParser — worked examples")
 struct CreditParserWorkedExamplesTests {
 
     private func parseSegment(_ segment: String, _ options: ParseOptions = .default) -> ParsedTrack {

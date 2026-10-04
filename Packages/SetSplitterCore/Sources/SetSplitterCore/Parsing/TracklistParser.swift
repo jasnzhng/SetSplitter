@@ -2,7 +2,7 @@
 //  TracklistParser.swift
 //  SetSplitterCore
 //
-//  implementation.md §5. Public entry point. A pure, deterministic pipeline:
+//  Public entry point. A pure, deterministic pipeline:
 //
 //    normalise → TimestampScanner → per segment:
 //        SegmentCleaner → EntrySplitter → SegmentCleaner → CreditParser
@@ -23,7 +23,7 @@ public struct TracklistParser: Sendable {
 
     public init() {}
 
-    /// Parses `text` under `options`. See `implementation.md` §5–§6.
+    /// Parses `text` under `options`.
     public func parse(text: String, options: ParseOptions = .default) -> ParseResult {
         let normalized = Self.normalize(text)
 
@@ -71,14 +71,14 @@ public struct TracklistParser: Sendable {
         return ParseResult(tracks: tracks, warnings: documentWarnings)
     }
 
-    // MARK: - Normalisation (implementation.md §14)
+    // MARK: - Normalisation
 
     /// CRLF/CR/U+2028/U+2029 → LF, NBSP and other Unicode spaces → ASCII space,
     /// invisible zero-width characters removed (but not the ZWJ, which glues emoji
     /// sequences together). Done once up front so every downstream stage —
     /// including `TimestampScanner`, which runs before `SegmentCleaner` — sees
-    /// clean text. (§14 assigns this to `SegmentCleaner`; hoisting it is a
-    /// deliberate deviation because the scanner runs first.)
+    /// clean text. (This could live in `SegmentCleaner`, but the scanner
+    /// runs first, so it is hoisted here.)
     static func normalize(_ text: String) -> String {
         // CRLF first so it becomes one LF, then any lone CR (classic Mac endings).
         let lines = text.replacing("\r\n", with: "\n")
@@ -101,7 +101,7 @@ public struct TracklistParser: Sendable {
 
     // MARK: - Validation
 
-    /// §14: same timestamp twice → keep the first, warn once per repeated value.
+    /// Same timestamp twice → keep the first, warn once per repeated value.
     private func dropDuplicateStarts(_ tracks: [ParsedTrack], into warnings: inout [ParseWarning]) -> [ParsedTrack] {
         var seen = Set<Double>()
         var reported = Set<Double>()
@@ -119,7 +119,7 @@ public struct TracklistParser: Sendable {
         return kept
     }
 
-    /// §5 validation: timestamps not strictly increasing → warn on the offender.
+    /// Validation: timestamps not strictly increasing → warn on the offender.
     private func flagNonMonotonic(_ tracks: inout [ParsedTrack]) {
         guard tracks.count > 1 else { return }
         for i in 1..<tracks.count where tracks[i].start <= tracks[i - 1].start {
@@ -129,7 +129,7 @@ public struct TracklistParser: Sendable {
         }
     }
 
-    /// §5 validation: a gap to the next track under `TrackTiming.shortTrackThreshold` → warn. The last
+    /// Validation: a gap to the next track under `TrackTiming.shortTrackThreshold` → warn. The last
     /// track's length needs the source duration and is checked by the planner.
     private func flagShortTracks(_ tracks: inout [ParsedTrack]) {
         guard tracks.count > 1 else { return }

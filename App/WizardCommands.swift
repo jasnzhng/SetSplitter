@@ -2,7 +2,7 @@
 //  WizardCommands.swift
 //  SetSplitter
 //
-//  Menu-bar commands and their shortcuts (§12 Phase 6): ⌘O browse, ⌘[ back,
+//  Menu-bar commands and their shortcuts: ⌘O browse, ⌘[ back,
 //  ⌘⏎ continue / export.
 //
 

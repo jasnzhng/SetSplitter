@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-// MARK: - Peak memory sampling  (implementation.md §13 Q5)
+// MARK: - Peak memory sampling
 
 enum MemorySampler {
     /// Current physical footprint in bytes (matches what Instruments / Activity Monitor call "Memory").

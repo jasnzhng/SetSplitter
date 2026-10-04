@@ -3,7 +3,7 @@ import Foundation
 
 // split-spike <input.(mp3|m4a|wav)> "0:00,2:36,4:44" [--codec aac|alac] [--bitrate 256] [--out DIR] [--album NAME] [--no-verify]
 //
-// Phase 0 feasibility spike (implementation.md §12, §13). Streams a decode of `input`, splits it at
+// Phase 0 feasibility spike. Streams a decode of `input`, splits it at
 // the given timestamps into per-track .m4a files with full iTunes metadata + artwork, then verifies
 // gapless structure by decoding the outputs back and comparing frame counts / seams to the source.
 
@@ -107,9 +107,9 @@ print("frames decoded     : \(result.framesDecoded)")
 print("frames from duration: \(result.expectedFramesFromDuration)  (Q3 delta: \(result.framesDecoded - result.expectedFramesFromDuration))")
 print("boundary frames    : \(result.boundaryFrames)")
 print("per-track frames   : \(result.perTrackFrames)  sum=\(result.perTrackFrames.reduce(0, +))")
-print("split path (Q4)    : API worked=\(result.apiSplitPathWorked) manualFallbackUsed=\(result.usedManualSplitPath)")
-print("peak footprint (Q5): \(MemorySampler.mb(result.peakFootprint))")
-print(String(format: "wall clock (Q6)   : %.2f s for %.1f s of audio  (=> ~%.0f s projected for 2 h)",
+print("split path    : API worked=\(result.apiSplitPathWorked) manualFallbackUsed=\(result.usedManualSplitPath)")
+print("peak footprint: \(MemorySampler.mb(result.peakFootprint))")
+print(String(format: "wall clock   : %.2f s for %.1f s of audio  (=> ~%.0f s projected for 2 h)",
              result.wallClock,
              Double(result.framesDecoded) / result.sourceSampleRate,
              result.wallClock / (Double(result.framesDecoded) / result.sourceSampleRate) * 7200))
@@ -120,7 +120,7 @@ for u in result.outputURLs {
 }
 print("")
 
-// MARK: metadata readback  (Q1, Q2)
+// MARK: metadata readback
 
 func loadMetadata(_ url: URL) -> [AVMetadataItem] {
     let asset = AVURLAsset(url: url)
@@ -183,7 +183,7 @@ if let first = result.outputURLs.first {
     }
 }
 
-// MARK: gapless / concat verification  (§7, Q2, Q3)
+// MARK: gapless / concat verification
 
 if verify {
     print("-- concat verification --")

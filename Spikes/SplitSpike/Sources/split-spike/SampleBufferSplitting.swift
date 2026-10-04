@@ -1,7 +1,7 @@
 import AVFoundation
 import CoreMedia
 
-// MARK: - CMSampleBuffer splitting  (implementation.md §7.5, §13 Q4)
+// MARK: - CMSampleBuffer splitting
 
 enum SampleSplitError: Error {
     case missingFormatDescription
@@ -17,7 +17,7 @@ struct SplitOutcome {
     let head: CMSampleBuffer
     let tail: CMSampleBuffer
     /// True when the CoreMedia API path (`CMSampleBufferCopySampleBufferForRange`) failed and
-    /// manual `CMBlockBuffer` slicing was used instead. Recorded for the §13 Q4 finding.
+    /// manual `CMBlockBuffer` slicing was used instead.
     let usedManualPath: Bool
 }
 
@@ -120,7 +120,7 @@ enum SampleBufferSplitting {
         return out
     }
 
-    /// Rewrites a buffer's presentation timestamp so track writers can `startSession(atSourceTime: .zero)` (§7.6).
+    /// Rewrites a buffer's presentation timestamp so track writers can `startSession(atSourceTime: .zero)`.
     static func retimed(_ buffer: CMSampleBuffer, toStartFrame startFrame: Int, sampleRate: Double) throws -> CMSampleBuffer {
         let pts = CMTime(value: CMTimeValue(startFrame), timescale: CMTimeScale(sampleRate))
         var timing = CMSampleTimingInfo(

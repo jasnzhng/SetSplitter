@@ -2,7 +2,7 @@
 //  EntrySplitter.swift
 //  SetSplitterCore
 //
-//  implementation.md §5.3. Stage 3. One timestamped segment may carry several
+//  Stage 3. One timestamped segment may carry several
 //  complete `Artist - Title` entries joined by an entry separator (`W/`, `w/`,
 //  or `With` at a chunk start). Splitting these out BEFORE any artist/title
 //  work is essential — a merged segment holds multiple " - " separators and

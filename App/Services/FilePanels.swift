@@ -2,7 +2,7 @@
 //  FilePanels.swift
 //  SetSplitter
 //
-//  implementation.md §3, §10. Async NSOpenPanel wrappers behind a protocol so
+//  Async NSOpenPanel wrappers behind a protocol so
 //  view models can be tested with a stub.
 //
 

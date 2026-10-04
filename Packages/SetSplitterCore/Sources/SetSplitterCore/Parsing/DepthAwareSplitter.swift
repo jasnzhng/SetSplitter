@@ -2,7 +2,7 @@
 //  DepthAwareSplitter.swift
 //  SetSplitterCore
 //
-//  implementation.md §5.4, §9. Splits a string on marker tokens, but only
+//  Splits a string on marker tokens, but only
 //  where they sit at paren/bracket depth 0, so "(John Summit & Maddix Edit)"
 //  and "[HNTR Edit]" are never cut. Unbalanced brackets degrade to a flat
 //  (depth-0-everywhere) scan rather than swallowing the rest of the string.

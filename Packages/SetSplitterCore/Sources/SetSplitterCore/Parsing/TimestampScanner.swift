@@ -2,7 +2,7 @@
 //  TimestampScanner.swift
 //  SetSplitterCore
 //
-//  implementation.md §5.1. Stage 1 of the pipeline. URLs are stripped first so
+//  Stage 1 of the pipeline. URLs are stripped first so
 //  a `&t=156s` query parameter can't be mistaken for a timestamp, and a
 //  markdown link `[0:00](url)` keeps only its label. What's left is scanned for
 //  `mm:ss` / `h:mm:ss` tokens with word-ish boundaries (`2:00PM` is rejected).

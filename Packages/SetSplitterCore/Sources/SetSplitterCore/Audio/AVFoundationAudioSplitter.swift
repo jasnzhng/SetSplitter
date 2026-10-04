@@ -2,7 +2,7 @@
 //  AudioSplitter.swift
 //  SetSplitterCore
 //
-//  implementation.md §7. Single streaming decode pass: AVAssetReader → LPCM
+//  Single streaming decode pass: AVAssetReader → LPCM
 //  sample buffers → one AVAssetWriter per track, cutting buffers at the exact
 //  frame index of each boundary. Never holds more than a few buffers in RAM.
 //

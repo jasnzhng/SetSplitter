@@ -2,7 +2,7 @@
 //  ArtworkPreparer.swift
 //  SetSplitterCore
 //
-//  implementation.md §8. Any image → a square JPEG ≤ 1400 px. ImageIO only
+//  Any image → a square JPEG ≤ 1400 px. ImageIO only
 //  (AppKit is off-limits in Core). Decodes via the thumbnail API so a 20 MB
 //  source is never fully inflated and EXIF orientation is applied.
 //

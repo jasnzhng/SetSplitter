@@ -39,7 +39,7 @@ final class ImportViewModel {
         await load(url)
     }
 
-    /// Drop handler. Only one file is accepted (§10).
+    /// Drop handler. Only one file is accepted.
     func handleDrop(_ urls: [URL]) async -> Bool {
         guard urls.count == 1, let url = urls.first else {
             phase = .failed("Drop a single \(SupportedAudio.displayName) file.")

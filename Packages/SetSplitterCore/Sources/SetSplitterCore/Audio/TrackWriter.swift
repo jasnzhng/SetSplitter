@@ -2,7 +2,7 @@
 //  TrackWriter.swift
 //  SetSplitterCore
 //
-//  implementation.md §7.4, §7.6. Wraps one AVAssetWriter + audio input for one
+//  Wraps one AVAssetWriter + audio input for one
 //  output file. Not Sendable on purpose: it lives inside a single splitter
 //  call and never crosses an isolation boundary.
 //
@@ -35,7 +35,7 @@ final class TrackWriter {
     }
 
     /// Appends a buffer. When the encoder isn't ready it naps 1 ms and re-checks
-    /// (the §7.5 polling fallback: simpler than bridging `requestMediaDataWhenReady`).
+    /// (the polling fallback: simpler than bridging `requestMediaDataWhenReady`).
     /// The nap is an `await`, so the thread is released rather than blocked.
     func append(_ buffer: CMSampleBuffer) async throws {
         while !input.isReadyForMoreMediaData {

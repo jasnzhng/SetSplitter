@@ -1,6 +1,6 @@
 import AVFoundation
 
-// MARK: - Metadata  (implementation.md §8, §13 Q1 & Q2)
+// MARK: - Metadata
 
 struct SpikeAlbumMetadata {
     var album: String
@@ -34,14 +34,14 @@ enum MetadataBuilder {
             items.append(string(.iTunesMetadataUserComment, comment))
         }
 
-        // Track / disc number: 8-byte big-endian blob  00 00 [n] [n] [total] [total] 00 00  (§8).
+        // Track / disc number: 8-byte big-endian blob  00 00 [n] [n] [total] [total] 00 00.
         items.append(binary(.iTunesMetadataTrackNumber, trackNumberData(index: track.trackNumber, total: totalTracks)))
         items.append(binary(.iTunesMetadataDiscNumber, trackNumberData(index: 1, total: 1)))
 
         // Compilation flag (cpil): 1-byte int.
         items.append(integer(.iTunesMetadataDiscCompilation, album.compilation ? 1 : 0))
 
-        // Gapless (pgap). §13 Q2: there is NO SDK identifier in AVMetadataIdentifier for it.
+        // Gapless (pgap). There is NO SDK identifier in AVMetadataIdentifier for it.
         // The `pgap` atom is a 1-byte boolean; address it by iTunes keyspace + key, written as
         // a single raw byte with the 8-bit-integer data type so it is not widened to 8 bytes.
         if album.gaplessAlbum {

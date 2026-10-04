@@ -2,7 +2,7 @@
 //  AudioSourceInspector.swift
 //  SetSplitterCore
 //
-//  implementation.md §7.1, §10. Reads duration / sample rate / channels from
+//  Reads duration / sample rate / channels from
 //  the source with precise timing (VBR MP3s lie about duration otherwise).
 //
 

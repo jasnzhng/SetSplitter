@@ -1,7 +1,7 @@
 import AVFoundation
 import Foundation
 
-// MARK: - Streaming split orchestrator  (implementation.md §7)
+// MARK: - Streaming split orchestrator
 
 struct SpikeConfig {
     var input: URL
@@ -50,7 +50,7 @@ enum Spike {
         let channels = Int(asbd.mChannelsPerFrame)
         let expectedFrames = Int((assetDurationSeconds(asset) * sampleRate).rounded())
 
-        // Boundaries → frame indices. Ranges tile [0, +inf); the last track runs to EOF (§7.2).
+        // Boundaries → frame indices. Ranges tile [0, +inf); the last track runs to EOF.
         var boundaryFrames = cfg.boundarySeconds
             .map { Int(($0 * sampleRate).rounded()) }
             .filter { $0 > 0 }

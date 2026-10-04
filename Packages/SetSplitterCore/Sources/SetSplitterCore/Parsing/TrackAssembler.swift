@@ -2,7 +2,7 @@
 //  TrackAssembler.swift
 //  SetSplitterCore
 //
-//  implementation.md §5.5. Stage 5. Merges the per-entry `Credit`s of one
+//  Stage 5. Merges the per-entry `Credit`s of one
 //  timestamped segment into a single `ParsedTrack`. `mashupStrategy` decides
 //  whether entries after the first are kept (`.merge`, default) or dropped
 //  (`.firstEntryOnly`).

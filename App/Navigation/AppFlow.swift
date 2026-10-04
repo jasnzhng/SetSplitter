@@ -2,7 +2,7 @@
 //  AppFlow.swift
 //  SetSplitter
 //
-//  implementation.md §10. The wizard is a plain enum-driven flow, simpler
+//  The wizard is a plain enum-driven flow, simpler
 //  than a NavigationStack for three linear screens.
 //
 

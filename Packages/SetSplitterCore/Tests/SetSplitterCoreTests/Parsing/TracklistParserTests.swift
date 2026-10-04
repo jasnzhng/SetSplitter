@@ -6,7 +6,7 @@ struct TracklistParserTests {
 
     let parser = TracklistParser()
 
-    // MARK: newline independence (§2.3)
+    // MARK: newline independence
 
     @Test("one line and many lines parse identically")
     func newlineIndependence() {
@@ -18,7 +18,7 @@ struct TracklistParserTests {
         #expect(a == [["A", "X"], ["B", "Y"], ["C", "Z"]])
     }
 
-    // MARK: normalisation (§14)
+    // MARK: normalisation
 
     @Test("CRLF, non-breaking space and zero-width characters are normalised")
     func normalisation() {
@@ -117,7 +117,7 @@ struct TracklistParserTests {
         #expect(result.tracks[0].title == "Song (Original Mix)")
     }
 
-    // MARK: W/ edge cases (§14)
+    // MARK: W/ edge cases
 
     @Test("W/ with no ' - ' of its own → extra title, no extra artist")
     func mashupBareTail() {

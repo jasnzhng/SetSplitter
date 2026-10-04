@@ -2,7 +2,7 @@
 //  ParseOptionsPanel.swift
 //  SetSplitter
 //
-//  The §6 options table as a compact control grid. Every row edits one field
+//  The parse options as a compact control grid. Every row edits one field
 //  of `ParseOptions`; the store persists and re-parses on change.
 //
 

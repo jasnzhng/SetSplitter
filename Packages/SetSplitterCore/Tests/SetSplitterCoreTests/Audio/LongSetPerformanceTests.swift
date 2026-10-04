@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import SetSplitterCore
 
-/// implementation.md §13 Q5/Q6: a 2-hour split should stay well under 200 MB and finish in
+/// A 2-hour split should stay well under 200 MB and finish in
 /// about two minutes. Opt-in (a 2 h file is too big to commit):
 ///
 ///     SETSPLITTER_LONG_FILE=/path/to/two-hour.mp3 swift test --filter LongSet

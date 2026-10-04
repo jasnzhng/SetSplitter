@@ -2,7 +2,7 @@
 //  ExportJob.swift
 //  SetSplitterCore
 //
-//  implementation.md §7.9. Orchestrates plan → temp folder → split + tag →
+//  Orchestrates plan → temp folder → split + tag →
 //  cover.jpg → atomic move into the final folder. Talks to the audio layer
 //  only through `AudioSplitting`.
 //

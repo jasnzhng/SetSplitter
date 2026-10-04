@@ -2,8 +2,8 @@
 //  ExportSettings.swift
 //  SetSplitterCore
 //
-//  implementation.md §4. v1 ships AAC only (CLAUDE.md decision log): the
-//  `.alac` case is kept so a Phase 7 ALAC path doesn't reshape the API, but
+//  v1 ships AAC only: the
+//  `.alac` case is kept so a future ALAC path doesn't reshape the API, but
 //  nothing wires it up and no UI exposes it.
 //
 

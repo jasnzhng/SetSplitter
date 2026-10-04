@@ -2,7 +2,7 @@
 //  TracklistFixtureTests.swift
 //  SetSplitterCoreTests
 //
-//  implementation.md §9. One parameterized test walks
+//  One parameterized test walks
 //  Tests/SetSplitterCoreTests/Fixtures/tracklists/ and checks every
 //  `NN-description.txt` against its sibling `NN-description.expected.json`
 //  (an array of `{start, artist, title}` — the joined display strings).
@@ -16,13 +16,13 @@ import Foundation
 import Testing
 @testable import SetSplitterCore
 
-@Suite("Tracklist fixtures (§9)")
+@Suite("Tracklist fixtures")
 struct TracklistFixtureTests {
 
     /// Guards against the loader silently degrading to zero cases (a missing
     /// fixtures directory would otherwise make the parameterized test vacuously
     /// pass). Bump this when adding a fixture.
-    @Test("the §9 fixture corpus is present")
+    @Test("the fixture corpus is present")
     func corpusIsLoaded() {
         #expect(TracklistFixture.all.count == 13, "expected 13 fixtures, loaded \(TracklistFixture.all.count)")
     }

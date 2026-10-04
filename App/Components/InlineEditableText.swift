@@ -2,7 +2,7 @@
 //  InlineEditableText.swift
 //  SetSplitter
 //
-//  Text that becomes a text field on click (§12 Phase 4). Return commits,
+//  Text that becomes a text field on click. Return commits,
 //  Escape cancels, and clicking elsewhere commits — the same contract as
 //  renaming a file in Finder.
 //

@@ -104,7 +104,7 @@ enum SnapshotRunner {
         @MainActor
         func seed(_ model: AppModel) {
             let store = model.store
-            // The implementation.md §5 sample, as it arrives from YouTube: one line, markdown links.
+            // A sample tracklist, as it arrives from YouTube: one line, markdown links.
             let sample = [
                 "01. [0:00](https://www.youtube.com/watch?v=x) | Belocca - Ifuna (Intro Edit)",
                 "02. [02:36](https://y.be/x&t=156s) | Dom Dolla ft. Daya - Dreamin (Eli Brown Remix)",

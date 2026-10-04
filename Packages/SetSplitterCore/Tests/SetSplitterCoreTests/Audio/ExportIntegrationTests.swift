@@ -3,7 +3,7 @@ import Foundation
 import Testing
 @testable import SetSplitterCore
 
-/// implementation.md §9 "Audio integration": real MP3 → three m4a files.
+/// Audio integration: real MP3 → three m4a files.
 @Suite("Export integration (real audio)", .serialized)
 struct ExportIntegrationTests {
 
@@ -146,7 +146,7 @@ struct ExportIntegrationTests {
         let req = request(parent: parent, info: info)
 
         // Cancel from inside the progress callback once track 2 is being written, so a writer is
-        // open and track 1 is already finished — the cleanup path §7.7 is about.
+        // open and track 1 is already finished — the cleanup path this test is about.
         let trigger = CancelTrigger()
         // `trigger.task` is set before the export can reach track 2 (it needs >10 s of audio to
         // be decoded first), and `fire()` is a no-op until then, so there is no lost-cancel race.

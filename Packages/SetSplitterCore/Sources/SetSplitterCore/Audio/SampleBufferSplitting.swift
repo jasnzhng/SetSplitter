@@ -5,7 +5,7 @@ import CoreMedia
 //  SampleBufferSplitting.swift
 //  SetSplitterCore
 //
-//  implementation.md §7.5, §13 Q4. Cuts an interleaved-LPCM CMSampleBuffer at
+//  Cuts an interleaved-LPCM CMSampleBuffer at
 //  an exact frame index. Ported from the Phase 0 spike: the CoreMedia range
 //  API worked on every split there, the manual block-buffer path is a fallback.
 //
@@ -110,7 +110,7 @@ enum SampleBufferSplitting {
         return out
     }
 
-    /// Rewrites a buffer's presentation timestamp so track writers can `startSession(atSourceTime: .zero)` (§7.6).
+    /// Rewrites a buffer's presentation timestamp so track writers can `startSession(atSourceTime: .zero)`.
     static func retimed(_ buffer: CMSampleBuffer, toStartFrame startFrame: Int, sampleRate: Double) throws -> CMSampleBuffer {
         let pts = CMTime(value: CMTimeValue(startFrame), timescale: CMTimeScale(sampleRate))
         var timing = CMSampleTimingInfo(

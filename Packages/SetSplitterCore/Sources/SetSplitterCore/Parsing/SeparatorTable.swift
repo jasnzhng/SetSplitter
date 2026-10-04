@@ -2,7 +2,7 @@
 //  SeparatorTable.swift
 //  SetSplitterCore
 //
-//  implementation.md §5.3–§5.4, §5 (end). Every marker string the parser
+//  Every marker string the parser
 //  recognises lives here as a static array with a comment per entry. Adding a
 //  marker is a one-line change — no new branch anywhere else.
 //
@@ -20,7 +20,7 @@ import Foundation
 /// Central registry of parser marker strings. Pure data.
 enum SeparatorTable {
 
-    // MARK: Artist/title separators (primary split, §5.4a)
+    // MARK: Artist/title separators (primary split)
 
     /// Candidate separators between the artist side and the title side, in
     /// auto-detection priority order. The parser picks the first one present.
@@ -35,7 +35,7 @@ enum SeparatorTable {
     //  `CreditParser.primarySeparatorCandidates`, keyed off
     //  `ParseOptions.SeparatorMode` directly.)
 
-    // MARK: Entry separators (mashups by W/, §5.3)
+    // MARK: Entry separators (mashups by W/)
 
     /// Slash-form markers that join several complete `Artist - Title` entries
     /// inside one timestamped segment. They split the segment into entries;
@@ -48,7 +48,7 @@ enum SeparatorTable {
     // (The spelled-out "with" separator needs a lookahead for a following `|`, so it
     //  lives as a regex in `EntrySplitter` rather than as a plain string here.)
 
-    // MARK: Artist-side separators (§5.4b)
+    // MARK: Artist-side separators
 
     /// Markers that split the artist side into multiple artists. Whole-word,
     /// case-insensitive. `" x "` is included but gated behind
@@ -68,7 +68,7 @@ enum SeparatorTable {
     /// Only added to `artistSeparators` when the user opts in.
     static let optionalArtistSeparatorX = " x "  // lowercase x as a collab marker
 
-    // MARK: Title-side separators (§5.4c)
+    // MARK: Title-side separators
 
     /// Markers that split the title side into parallel mashup titles. A strict
     /// subset of the artist separators — only "versus" forms.
@@ -78,7 +78,7 @@ enum SeparatorTable {
         "versus",  // versus, spelled out
     ]
 
-    // MARK: Featured-credit markers (§5.4d)
+    // MARK: Featured-credit markers
 
     /// Inside a trailing `(...)` / `[...]` on the title side, these introduce a
     /// featured artist to pull out into `artists`. Remix / edit / bootleg /
@@ -91,7 +91,7 @@ enum SeparatorTable {
         "featuring",  // "(featuring X)"
     ]
 
-    // MARK: Noise tags (§5.2, gated by ParseOptions.stripBracketedTags)
+    // MARK: Noise tags (gated by ParseOptions.stripBracketedTags)
 
     /// Bracketed tokens that are promotional noise, not part of a title.
     /// Compared case-insensitively against the *contents* of a `(...)` / `[...]`

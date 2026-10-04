@@ -46,7 +46,7 @@ public struct AudioSourceInfo: Hashable, Sendable {
     }
 
     /// Total decoded frames, `round(duration × sampleRate)`. The planner clamps
-    /// every cut point to `[0, totalFrames]` (Phase 0 §13 Q3: this matches what
+    /// every cut point to `[0, totalFrames]` (this matches what
     /// `AVAssetReader` actually decodes, even for MP3s with no Xing header).
     public var totalFrames: Int64 {
         Int64((duration * sampleRate).rounded())

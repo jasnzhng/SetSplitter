@@ -2,7 +2,7 @@
 //  ExportPlanner.swift
 //  SetSplitterCore
 //
-//  implementation.md §7.2, §14. Resolves parsed tracks (timestamps) into
+//  Resolves parsed tracks (timestamps) into
 //  concrete, gapless frame ranges and unique filenames. Pure and deterministic.
 //
 

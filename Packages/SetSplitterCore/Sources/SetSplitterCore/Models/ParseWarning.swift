@@ -2,7 +2,7 @@
 //  ParseWarning.swift
 //  SetSplitterCore
 //
-//  implementation.md §5 (validation), §5.4a, §6. Parsing never hard-fails;
+//  Parsing never hard-fails;
 //  every problem is a warning. Document-level warnings live on
 //  `ParseResult.warnings`; track-level warnings live on `ParsedTrack.warnings`.
 //  Only `.noTracksParsed` blocks the wizard's Next button (UI concern).
@@ -44,7 +44,7 @@ public enum ParseWarning: Hashable, Sendable {
     case emptyTitle
 
     /// The track's start is at or past the source duration and it was dropped.
-    /// Produced by the export planner (Phase 3), defined here for one home.
+    /// Produced by the export planner, defined here for one home.
     case startBeyondSourceDuration(Timestamp)
 }
 

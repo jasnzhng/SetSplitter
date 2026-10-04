@@ -2,7 +2,7 @@
 //  Preferences.swift
 //  SetSplitter
 //
-//  implementation.md §10, §12 Phase 6. Persists the last-used parse options,
+//  Persists the last-used parse options,
 //  genre, and a security-scoped bookmark to the last output folder.
 //
 

@@ -2,7 +2,7 @@
 //  AlbumMetadata.swift
 //  SetSplitterCore
 //
-//  implementation.md §4, §8. Album-level tags shared by every output track.
+//  Album-level tags shared by every output track.
 //
 
 import Foundation

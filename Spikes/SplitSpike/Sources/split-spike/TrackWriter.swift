@@ -1,6 +1,6 @@
 import AVFoundation
 
-// MARK: - One AVAssetWriter per output track  (implementation.md §7.4, §7.6)
+// MARK: - One AVAssetWriter per output track
 
 enum TrackWriterError: Error {
     case cannotAddInput
@@ -21,7 +21,7 @@ final class TrackWriter {
         self.outputURL = outputURL
         try? FileManager.default.removeItem(at: outputURL)
         writer = try AVAssetWriter(outputURL: outputURL, fileType: .m4a)
-        writer.metadata = metadata  // MUST be set before startWriting()  (§7.4)
+        writer.metadata = metadata  // MUST be set before startWriting()
 
         input = AVAssetWriterInput(mediaType: .audio, outputSettings: encoderSettings)
         input.expectsMediaDataInRealTime = false
@@ -38,7 +38,7 @@ final class TrackWriter {
         started = true
     }
 
-    /// Blocking append (spike only — real Core uses the requestMediaDataWhenReady stream, §7.5).
+    /// Blocking append (spike only — real Core uses the requestMediaDataWhenReady stream).
     func append(_ buffer: CMSampleBuffer) throws {
         while !input.isReadyForMoreMediaData {
             Thread.sleep(forTimeInterval: 0.002)

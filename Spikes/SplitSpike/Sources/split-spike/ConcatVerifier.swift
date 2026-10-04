@@ -1,6 +1,6 @@
 import AVFoundation
 
-// MARK: - Gapless verification  (implementation.md §7 "Gapless verification", §13 Q2 & Q3)
+// MARK: - Gapless verification
 
 struct DecodeResult {
     var samples: [Float]     // interleaved
@@ -25,7 +25,7 @@ struct ConcatReport {
     let bitExact: Bool              // whole-file max abs diff < 1e-6 (meaningful for ALAC)
     let wholeFileMaxAbsDiff: Float
     let seams: [SeamReport]
-    let expectedFramesFromDuration: Int  // duration.seconds * sampleRate, rounded  (§13 Q3)
+    let expectedFramesFromDuration: Int  // duration.seconds * sampleRate, rounded
     let readerDurationDelta: Int         // sourceFrames - expectedFramesFromDuration
 }
 
@@ -137,7 +137,7 @@ enum ConcatVerifier {
                 typicalAdjacentJump: typical))
         }
 
-        // §13 Q3 — reader frame count vs duration-derived count.
+        // Reader frame count vs duration-derived count.
         let asset = AVURLAsset(url: source, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
         let expected = Int((assetDurationSeconds(asset) * src.sampleRate).rounded())
 

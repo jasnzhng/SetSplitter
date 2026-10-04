@@ -4,7 +4,7 @@
 //
 //  One track, styled like a Music app row: artwork tile with the track number,
 //  bold title over secondary artist, monospaced duration on the right. Title
-//  and artist edit inline (§12 Phase 4).
+//  and artist edit inline.
 //
 
 import SwiftUI

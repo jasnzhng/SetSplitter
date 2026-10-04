@@ -2,7 +2,7 @@
 //  ExportProgress.swift
 //  SetSplitterCore
 //
-//  implementation.md §7.8. Delivered by the splitter at most ~10×/s.
+//  Delivered by the splitter at most ~10×/s.
 //
 
 import Foundation

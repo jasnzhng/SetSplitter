@@ -2,7 +2,7 @@
 //  Track.swift
 //  SetSplitterCore
 //
-//  implementation.md §4. `ParsedTrack` is the parser's per-track output;
+//  `ParsedTrack` is the parser's per-track output;
 //  `ParseResult` bundles the tracks with document-level warnings. Durations
 //  are always derived (`next.start - this.start`), never stored here.
 //

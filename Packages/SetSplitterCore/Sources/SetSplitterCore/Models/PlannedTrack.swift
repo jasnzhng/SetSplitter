@@ -2,7 +2,7 @@
 //  PlannedTrack.swift
 //  SetSplitterCore
 //
-//  implementation.md §4. A ParsedTrack resolved to a concrete sample-frame
+//  A ParsedTrack resolved to a concrete sample-frame
 //  range, a track number and a filename — the ExportPlanner's output.
 //
 

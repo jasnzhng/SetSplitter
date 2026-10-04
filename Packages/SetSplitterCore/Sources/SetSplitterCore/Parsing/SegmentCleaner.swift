@@ -2,7 +2,7 @@
 //  SegmentCleaner.swift
 //  SetSplitterCore
 //
-//  implementation.md §5.2. Stage 2. Takes one raw segment's text and strips
+//  Stage 2. Takes one raw segment's text and strips
 //  everything that isn't artist/title: leading track numbering and
 //  pipe/dash/bullet leaders, the *next* entry's numbering that leaked onto the
 //  end in a one-line list (`… (Intro Edit) 02.`), promotional bracketed tags

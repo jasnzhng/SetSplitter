@@ -2,7 +2,7 @@
 //  AlbumNameGuesser.swift
 //  SetSplitterCore
 //
-//  implementation.md §10: "Album = last folder-ish guess from the filename".
+//  "Album = last folder-ish guess from the filename".
 //
 
 import Foundation

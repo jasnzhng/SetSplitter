@@ -2,7 +2,7 @@
 //  TrackEdits.swift
 //  SetSplitterCore
 //
-//  implementation.md §12 Phase 4: inline edits on preview cards survive
+//  Inline edits on preview cards survive
 //  re-parses as long as the edited track's timestamp still exists. Edits are
 //  keyed by start time rather than track identity because every re-parse mints
 //  new `ParsedTrack` ids.

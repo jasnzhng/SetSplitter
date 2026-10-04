@@ -1,6 +1,6 @@
 import Foundation
 
-// MARK: - Raw MP4 `ilst` walker  (implementation.md §13 Q1 & Q2)
+// MARK: - Raw MP4 `ilst` walker
 
 // AVAsset.load(.metadata) round-trips AVFoundation's own in-memory model even when the on-disk
 // atom is malformed, so it is NOT a real verification. This walks the actual file bytes and dumps

@@ -15,7 +15,7 @@ struct SessionStoreTests {
         #expect(store.tracks.isEmpty)
         #expect(store.warnings.isEmpty)
         #expect(store.canLeaveTracklist)
-        #expect(store.exportPlan?.tracks.count == 1)   // §14: one track named after the album
+        #expect(store.exportPlan?.tracks.count == 1)   // one track named after the album
     }
 
     @Test("pasted text with no timestamps blocks Continue")

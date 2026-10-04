@@ -2,7 +2,7 @@
 //  FilenameSanitizer.swift
 //  SetSplitterCore
 //
-//  implementation.md §8, §14. Turns arbitrary track text into safe file names.
+//  Turns arbitrary track text into safe file names.
 //
 
 import Foundation

@@ -2,7 +2,7 @@
 //  MetadataBuilder.swift
 //  SetSplitterCore
 //
-//  implementation.md §8, §13 Q1–Q2. Builds the iTunes-keyspace metadata items
+//  Builds the iTunes-keyspace metadata items
 //  for one output track. Every field here was proven writable through
 //  AVAssetWriter in Phase 0 (no MP4AtomEditor fallback needed).
 //

@@ -2,7 +2,7 @@
 //  EncodingSettings.swift
 //  SetSplitterCore
 //
-//  implementation.md §7. Output-settings dictionaries for the reader (LPCM)
+//  Output-settings dictionaries for the reader (LPCM)
 //  and each track writer. Channel count always comes from the source. Sample
 //  rate does too, unless AAC can't encode it (hi-res WAVs): then the single
 //  reader pass resamples once, before any cut, so seams stay sample-exact.
@@ -90,7 +90,7 @@ enum EncodingSettings {
         return ranges.map { Int($0.mMaximum) }.max()
     }
 
-    /// Interleaved 32-bit float makes frame-accurate splitting simple (§7.3).
+    /// Interleaved 32-bit float makes frame-accurate splitting simple.
     static func readerLPCM(sampleRate: Double, channels: Int) -> [String: Any] {
         [
             AVFormatIDKey: kAudioFormatLinearPCM,

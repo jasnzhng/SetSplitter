@@ -2,7 +2,7 @@
 //  SessionStore.swift
 //  SetSplitter
 //
-//  implementation.md §10. The single source of truth across the three screens.
+//  The single source of truth across the three screens.
 //  View models read and write it; it owns no AVFoundation and no UI.
 //
 
@@ -184,7 +184,7 @@ final class SessionStore {
         withAnimation(Theme.smooth) { parseResult = parse() }
     }
 
-    /// An empty tracklist is legal (§14: one track named after the album), so it
+    /// An empty tracklist is legal (one track named after the album), so it
     /// shows no tracks *and* no warnings rather than the parser's "no timestamps".
     private func parse() -> ParseResult {
         tracklistText.trimmed.isEmpty ? ParseResult() : parser.parse(text: tracklistText, options: parseOptions)
@@ -198,7 +198,7 @@ final class SessionStore {
         guessedAlbumTitle = guess
     }
 
-    /// Debounces per-keystroke parsing by ~100 ms (§10) so a fast typist doesn't
+    /// Debounces per-keystroke parsing by ~100 ms so a fast typist doesn't
     /// churn the preview; the parser itself is fast enough that this is purely
     /// to avoid UI flicker.
     private func scheduleReparse() {

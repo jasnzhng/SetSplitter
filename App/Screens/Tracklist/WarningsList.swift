@@ -2,7 +2,7 @@
 //  WarningsList.swift
 //  SetSplitter
 //
-//  The small yellow list under the preview (§5). Non-blocking except the one
+//  The small yellow list under the preview. Non-blocking except the one
 //  "couldn't parse any tracks" case, which the footer also reflects.
 //
 

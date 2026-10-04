@@ -2,7 +2,7 @@
 //  SupportedAudio.swift
 //  SetSplitter
 //
-//  implementation.md §1: the accepted input types live in one place so adding
+//  The accepted input types live in one place so adding
 //  another format later (`.aiff`, `.flac`) is a one-line change. The Core
 //  splitter is format-agnostic: `AVAssetReader` decodes whatever AVFoundation
 //  can read to float PCM, so this list is the only gate.

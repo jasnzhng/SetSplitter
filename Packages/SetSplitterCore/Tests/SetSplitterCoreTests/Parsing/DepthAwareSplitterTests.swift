@@ -61,7 +61,7 @@ struct DepthAwareSplitterTests {
         #expect(m?.separator == "feat.")
     }
 
-    // MARK: unbalanced degradation (§9)
+    // MARK: unbalanced degradation
 
     @Test("unbalanced parens degrade to depth 0 — split still happens")
     func unbalancedParensDegrade() {

@@ -9,7 +9,7 @@ enum SpikeCodec: String {
 
 enum EncodingSettings {
     /// Output settings dictionary for an `AVAssetWriterInput` of media type `.audio`.
-    /// Sample rate and channel count are always inherited from the source (implementation.md §2.2, §7).
+    /// Sample rate and channel count are always inherited from the source.
     static func settings(codec: SpikeCodec, sampleRate: Double, channels: Int, aacBitrateKbps: Int) -> [String: Any] {
         var layout = AudioChannelLayout()
         layout.mChannelLayoutTag = channels == 1 ? kAudioChannelLayoutTag_Mono : kAudioChannelLayoutTag_Stereo
@@ -35,7 +35,7 @@ enum EncodingSettings {
         }
     }
 
-    /// LPCM settings for the reader. Interleaved 32-bit float makes frame-accurate splitting simple (§7.3).
+    /// LPCM settings for the reader. Interleaved 32-bit float makes frame-accurate splitting simple.
     static func readerLPCM(sampleRate: Double, channels: Int) -> [String: Any] {
         [
             AVFormatIDKey: kAudioFormatLinearPCM,

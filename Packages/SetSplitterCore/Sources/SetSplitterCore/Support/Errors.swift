@@ -2,7 +2,7 @@
 //  Errors.swift
 //  SetSplitterCore
 //
-//  implementation.md §3: typed errors with user-facing `errorDescription`,
+//  Typed errors with user-facing `errorDescription`,
 //  one enum per subsystem. Cancellation is *not* an error case — it surfaces
 //  as Swift's `CancellationError`.
 //

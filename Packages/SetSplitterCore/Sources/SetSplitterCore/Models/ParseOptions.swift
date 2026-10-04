@@ -2,15 +2,14 @@
 //  ParseOptions.swift
 //  SetSplitterCore
 //
-//  implementation.md §6. The semantic knobs the Tracklist screen exposes.
+//  The semantic knobs the Tracklist screen exposes.
 //  `Codable` so the user's last-used options persist in `UserDefaults`.
-//  Defaults here must match the "Default" column of the §6 table exactly.
 //
 
 import Foundation
 
-/// User-tunable parsing behaviour. Every field maps to one row of the §6
-/// options table; anything not in that table stays out of v1.
+/// User-tunable parsing behaviour. Every field maps to one row of the Tracklist
+/// screen's options panel; anything not in the panel stays out of v1.
 public struct ParseOptions: Hashable, Sendable, Codable {
 
     /// Which side of the artist/title separator the artist is on.

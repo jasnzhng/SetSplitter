@@ -2,7 +2,7 @@
 //  ImportGuardTests.swift
 //  SetSplitterCoreTests
 //
-//  implementation.md §3, §9: nothing under Sources/ may import SwiftUI or AppKit.
+//  Nothing under Sources/ may import SwiftUI or AppKit.
 //  The core package must stay headlessly testable and UI-framework-free.
 //
 

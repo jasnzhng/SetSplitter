@@ -2,7 +2,7 @@
 //  TrackTiming.swift
 //  SetSplitterCore
 //
-//  implementation.md §4: durations are always derived, never stored.
+//  Durations are always derived, never stored.
 //
 
 import Foundation

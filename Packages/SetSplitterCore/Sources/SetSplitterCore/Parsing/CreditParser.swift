@@ -2,7 +2,7 @@
 //  CreditParser.swift
 //  SetSplitterCore
 //
-//  implementation.md §5.4. Stage 4. Turns ONE entry string ("Artist - Title")
+//  Stage 4. Turns ONE entry string ("Artist - Title")
 //  into structured `artists` and `titles` arrays. Every separator is only
 //  recognised at paren/bracket depth 0, so "(John Summit & Maddix Edit)" and
 //  "[HNTR Edit]" survive intact. Artist names are NEVER split on "&", "and" or

@@ -2,7 +2,7 @@
 //  SecurityScopedAccess.swift
 //  SetSplitter
 //
-//  implementation.md §10. RAII wrapper around start/stopAccessingSecurityScopedResource.
+//  RAII wrapper around start/stopAccessingSecurityScopedResource.
 //  Access begins on init and ends on deinit, so holding the object for the
 //  whole export (source file *and* output parent folder) is enough.
 //
