@@ -101,22 +101,6 @@ struct TracklistParserTests {
         #expect(result.tracks[0].titles == ["X", "Y"])
     }
 
-    // MARK: bracketed tags
-
-    @Test("stripBracketedTags off keeps [Free Download]")
-    func keepBracketedTags() {
-        var opts = ParseOptions.default
-        opts.stripBracketedTags = false
-        let result = parser.parse(text: "0:00 Artist - Song [Free Download]", options: opts)
-        #expect(result.tracks[0].title == "Song [Free Download]")
-    }
-
-    @Test("stripBracketedTags on removes [Free Download] but keeps (Original Mix)")
-    func stripBracketedTagsDefault() {
-        let result = parser.parse(text: "0:00 Artist - Song (Original Mix) [Free Download]")
-        #expect(result.tracks[0].title == "Song (Original Mix)")
-    }
-
     // MARK: W/ edge cases
 
     @Test("W/ with no ' - ' of its own → extra title, no extra artist")

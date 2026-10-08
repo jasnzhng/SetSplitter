@@ -15,8 +15,8 @@ struct VinylRecord: View {
     /// Diameter of the whole disc.
     let size: CGFloat
     var isSpinning = false
-    /// Label gradient, typically the first two palette colours.
-    var labelColors: [Color] = [ArtPalette.coral, ArtPalette.plum]
+    /// Label gradient, taken from `ArtPalette.labelColors`.
+    var labelColors: [Color] = [ArtPalette.indigo, ArtPalette.mint]
     /// Album art to use as the label instead of the gradient: scaled to fill the label circle and clipped to it.
     var labelArt: NSImage?
     /// Fractions (0…1) of the groove area at which to draw a track-gap band.
@@ -124,7 +124,7 @@ struct VinylRecord: View {
     private func drawLabel(in canvas: inout GraphicsContext, center: CGPoint, radius labelRadius: CGFloat,
                            circle: (CGFloat) -> Path) {
         canvas.fill(circle(labelRadius), with: .linearGradient(
-            Gradient(colors: labelColors.isEmpty ? [ArtPalette.coral] : labelColors),
+            Gradient(colors: labelColors.isEmpty ? [ArtPalette.indigo] : labelColors),
             startPoint: CGPoint(x: center.x - labelRadius, y: center.y - labelRadius),
             endPoint: CGPoint(x: center.x + labelRadius, y: center.y + labelRadius)))
         canvas.stroke(circle(labelRadius * 0.86), with: .color(.white.opacity(0.22)), lineWidth: 0.6)

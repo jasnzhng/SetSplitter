@@ -15,6 +15,14 @@ struct ArtPalette: Equatable {
 
     /// Three blob colours, in order of prominence.
     var colors: [Color]
+    /// The record label's gradient. Cover-derived palettes use their two most prominent colours;
+    /// resting palettes use the app's accent pair so the record matches the UI.
+    var labelColors: [Color]
+
+    init(colors: [Color], labelColors: [Color]? = nil) {
+        self.colors = colors
+        self.labelColors = labelColors ?? Array(colors.prefix(2))
+    }
 
     static let coral = Color(red: 1.00, green: 0.42, blue: 0.30)
     static let amber = Color(red: 1.00, green: 0.69, blue: 0.36)
@@ -22,6 +30,8 @@ struct ArtPalette: Equatable {
     static let violet = Color(red: 0.48, green: 0.36, blue: 1.00)
     static let rose = Color(red: 1.00, green: 0.36, blue: 0.54)
     static let gold = Color(red: 1.00, green: 0.76, blue: 0.36)
+    static let indigo = Color(red: 0.00, green: 0.071, blue: 0.475)   // #001279, the light-mode accent
+    static let mint = Color(red: 0.902, green: 1.00, blue: 0.984)     // #E6FFFB, the dark-mode accent
 
     /// A palette taken from a cover's dominant colours. Fewer than three are padded with
     /// lighter/darker relatives so the backdrop always has three blobs to draw.
@@ -38,9 +48,9 @@ struct ArtPalette: Equatable {
     /// Resting palette for a wizard step.
     static func resting(for step: AppFlow.Step) -> ArtPalette {
         switch step {
-        case .importFile: ArtPalette(colors: [coral, amber, plum])
-        case .tracklist: ArtPalette(colors: [violet, coral, rose])
-        case .export: ArtPalette(colors: [coral, plum, gold])
+        case .importFile: ArtPalette(colors: [coral, amber, plum], labelColors: [indigo, mint])
+        case .tracklist: ArtPalette(colors: [violet, coral, rose], labelColors: [indigo, mint])
+        case .export: ArtPalette(colors: [coral, plum, gold], labelColors: [indigo, mint])
         }
     }
 }

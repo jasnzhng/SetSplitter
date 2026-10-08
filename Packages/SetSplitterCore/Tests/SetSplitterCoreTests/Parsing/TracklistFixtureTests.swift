@@ -149,7 +149,6 @@ private struct FixtureOptions: Decodable {
     var mashupStrategy: String?
     var leadInStrategy: String?
     var treatXAsArtistSeparator: Bool?
-    var stripBracketedTags: Bool?
     var separatorMode: String?
 
     func applied(to base: ParseOptions) -> ParseOptions {
@@ -158,7 +157,6 @@ private struct FixtureOptions: Decodable {
         if let v = mashupStrategy, let parsed = ParseOptions.MashupStrategy(rawValue: v) { o.mashupStrategy = parsed }
         if let v = leadInStrategy, let parsed = ParseOptions.LeadInStrategy(rawValue: v) { o.leadInStrategy = parsed }
         if let v = treatXAsArtistSeparator { o.treatXAsArtistSeparator = v }
-        if let v = stripBracketedTags { o.stripBracketedTags = v }
         if let v = separatorMode {
             switch v {
             case "auto":   o.separatorMode = .auto

@@ -5,8 +5,7 @@
 //  Stage 2. Takes one raw segment's text and strips
 //  everything that isn't artist/title: leading track numbering and
 //  pipe/dash/bullet leaders, the *next* entry's numbering that leaked onto the
-//  end in a one-line list (`… (Intro Edit) 02.`), promotional bracketed tags
-//  (gated by `ParseOptions.stripBracketedTags`), and redundant whitespace.
+//  end in a one-line list (`… (Intro Edit) 02.`), and redundant whitespace.
 //
 //  The rules are a list you can extend one line at a time. Input is assumed
 //  already Unicode-normalised by `TracklistParser` (CRLF, NBSP, zero-width).
@@ -27,7 +26,6 @@ struct SegmentCleaner {
     // The next entry's numbering, left dangling on the end of a one-line list.
     private let trailingNumber = /\s*\b\d{1,3}\s*[.)]\s*$/
 
-    private let bracketGroup = /[\[(]([^\[\]()]*)[\])]/
 
     private let whitespaceRun = /\s+/
 
@@ -49,10 +47,6 @@ struct SegmentCleaner {
         }
 
         s = stripTrailingNumber(from: s)
-
-        if options.stripBracketedTags {
-            s = stripNoiseTags(from: s)
-        }
 
         s = s.replacing(whitespaceRun, with: " ").trimmingCharacters(in: .whitespaces)
         return s
@@ -84,20 +78,5 @@ struct SegmentCleaner {
             if "([".contains(ch) { depth += 1 } else if ")]".contains(ch) { depth = max(0, depth - 1) }
         }
         return depth > 0
-    }
-
-    /// Removes `[...]` / `(...)` groups whose contents are a known promo tag.
-    /// Musical parentheticals ("(Eli Brown Remix)", "(Acappella)") are kept.
-    private func stripNoiseTags(from text: String) -> String {
-        text.replacing(bracketGroup) { match in
-            let inner = String(match.output.1)
-                .lowercased()
-                .replacing(whitespaceRun, with: " ")
-                .trimmingCharacters(in: .whitespaces)
-            let isNoise = SeparatorTable.bracketedNoiseTags.contains { tag in
-                inner == tag || inner.contains(tag)
-            }
-            return isNoise ? "" : String(match.output.0)
-        }
     }
 }

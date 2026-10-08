@@ -16,7 +16,10 @@ settings:
     DEVELOPMENT_LANGUAGE: en
     ENABLE_HARDENED_RUNTIME: YES
     CODE_SIGN_STYLE: Automatic
-    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: CLZD28SX2P
+  configs:
+    Debug:
+      CODE_SIGN_IDENTITY: "-"
 
 packages:
   SetSplitterCore:

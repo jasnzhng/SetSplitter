@@ -74,11 +74,8 @@ struct ParseOptionsPanel: View {
                 }
                 GridRow {
                     Color.clear.frame(width: 0, height: 0)
-                    HStack(spacing: 16) {
-                        Toggle("Strip [Free Download] tags", isOn: $options.stripBracketedTags)
-                        Toggle("Treat “x” as separator", isOn: $options.treatXAsArtistSeparator)
-                    }
-                    .toggleStyle(.checkbox)
+                    Toggle("Treat “x” as separator", isOn: $options.treatXAsArtistSeparator)
+                        .toggleStyle(.checkbox)
                 }
             }
             .controlSize(.small)

@@ -90,18 +90,4 @@ enum SeparatorTable {
         "ft",         // "(ft X)"
         "featuring",  // "(featuring X)"
     ]
-
-    // MARK: Noise tags (gated by ParseOptions.stripBracketedTags)
-
-    /// Bracketed tokens that are promotional noise, not part of a title.
-    /// Compared case-insensitively against the *contents* of a `(...)` / `[...]`
-    /// group after trimming.
-    static let bracketedNoiseTags: [String] = [
-        "free download",   // "[Free Download]"
-        "free dl",         // "(Free DL)"
-        "download",        // bare "[Download]"
-        "buy",             // "[Buy]"
-        "out now",         // "[OUT NOW]"
-        "click buy for free download",
-    ]
 }

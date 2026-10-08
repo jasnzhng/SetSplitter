@@ -51,8 +51,8 @@ struct SessionStoreTests {
     func optionsPersist() {
         let prefs = StubPreferences()
         let store = Fixtures.store(prefs: prefs)
-        store.parseOptions.stripBracketedTags = false
-        #expect(prefs.options.stripBracketedTags == false)
+        store.parseOptions.treatXAsArtistSeparator = true
+        #expect(prefs.options.treatXAsArtistSeparator)
     }
 
     @Test("year: empty is fine, four digits is fine, anything else is invalid")

@@ -62,24 +62,18 @@ public struct ParseOptions: Hashable, Sendable, Codable {
     /// Lead-in handling. Default `.includeInFirstTrack`.
     public var leadInStrategy: LeadInStrategy
 
-    /// Strip bracketed noise tags like `[Free Download]`, `(Free DL)`.
-    /// Default `true`.
-    public var stripBracketedTags: Bool
-
     public init(
         fieldOrder: FieldOrder = .artistThenTitle,
         separatorMode: SeparatorMode = .auto,
         mashupStrategy: MashupStrategy = .merge,
         treatXAsArtistSeparator: Bool = false,
-        leadInStrategy: LeadInStrategy = .includeInFirstTrack,
-        stripBracketedTags: Bool = true
+        leadInStrategy: LeadInStrategy = .includeInFirstTrack
     ) {
         self.fieldOrder = fieldOrder
         self.separatorMode = separatorMode
         self.mashupStrategy = mashupStrategy
         self.treatXAsArtistSeparator = treatXAsArtistSeparator
         self.leadInStrategy = leadInStrategy
-        self.stripBracketedTags = stripBracketedTags
     }
 
     /// All defaults — the settings a first-time user sees.

@@ -18,19 +18,10 @@ struct SegmentCleanerTests {
         ("Artist - Title 02.", "Artist - Title"),                                    // trailing next-entry number
         ("Artist - Title 12)", "Artist - Title"),                                    // trailing next-entry number, paren
         ("Artist  -   Title", "Artist - Title"),                                     // whitespace collapse
-        ("Artist - Song [Free Download]", "Artist - Song"),                          // noise tag
-        ("Artist - Song (Free DL)", "Artist - Song"),                               // noise tag variant
         ("Artist - Song (Eli Brown Remix)", "Artist - Song (Eli Brown Remix)"),      // musical paren kept
     ])
     func rule(_ input: String, _ expected: String) {
         #expect(cleaner.clean(input, options: .default) == expected)
-    }
-
-    @Test("noise-tag stripping is gated by the option")
-    func noiseTagGate() {
-        var opts = ParseOptions.default
-        opts.stripBracketedTags = false
-        #expect(cleaner.clean("Artist - Song [Free Download]", options: opts) == "Artist - Song [Free Download]")
     }
 }
 

@@ -3,8 +3,9 @@
 //  SetSplitter
 //
 //  Shared design tokens. Colour comes from the system palette plus the single
-//  asset-catalog accent (a warm vermilion, re-tuned for dark mode), so the app
-//  follows light/dark automatically and never hard-codes a second brand colour.
+//  asset-catalog accent (deep indigo #001279 in light mode, pale cyan #E6FFFB
+//  in dark mode), so the app follows light/dark automatically and never
+//  hard-codes a second brand colour.
 //
 
 import SwiftUI

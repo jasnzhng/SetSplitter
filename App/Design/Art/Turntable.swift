@@ -48,7 +48,7 @@ struct Turntable: View {
         // Layout size is the record alone, so the record (not record + arm) is what
         // centres in its parent; the arm overhangs to the right via the overlay.
         VinylRecord(size: radius * 2, isSpinning: isSpinning,
-                    labelColors: Array(palette.colors.prefix(2)), trackGaps: trackGaps)
+                    labelColors: palette.labelColors, trackGaps: trackGaps)
             .scaleEffect(state == .targeted ? 1.04 : 1)
             .animation(Theme.smooth, value: state == .targeted)
             .frame(width: radius * 2, height: radius * 2)
