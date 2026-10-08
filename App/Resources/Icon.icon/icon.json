@@ -1,0 +1,87 @@
+{
+  "features" : [
+    "refractivity"
+  ],
+  "fill" : {
+    "automatic-gradient" : "srgb:0.00000,0.07059,0.47451,1.00000"
+  },
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill-specializations" : [
+            {
+              "value" : "automatic"
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "srgb:0.90196,1.00000,1.00000,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "Vector-1.svg",
+          "name" : "Vector-1",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              6.7089355976826255,
+              -64.06670576874544
+            ]
+          }
+        },
+        {
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "srgb:0.90196,1.00000,1.00000,1.00000"
+              }
+            }
+          ],
+          "image-name" : "Vector.svg",
+          "name" : "Vector",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              36.72294901446173,
+              58.81919785127269
+            ]
+          }
+        }
+      ],
+      "lighting" : "combined",
+      "opacity" : 0.95,
+      "position" : {
+        "scale" : 2.15,
+        "translation-in-points" : [
+          -45.932336208055176,
+          1.4132572612832632
+        ]
+      },
+      "refractivity" : {
+        "depth" : 0.1535546875,
+        "enabled" : true,
+        "strength" : 0.199140625
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
