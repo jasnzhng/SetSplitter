@@ -83,4 +83,3 @@ If this policy changes, I'll update the "Last updated" date above. If the app ev
 ### Contact
 
 Questions about this policy? Contact me at [jasonzha@umich.edu](mailto:jasonzha@umich.edu).
-

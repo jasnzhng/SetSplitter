@@ -24,3 +24,7 @@ spike-out/
 *.md
 !/README.md
 !/Spikes/SplitSpike/README.md
+*.zip
+*.mov
+Sample Data/sampleset.mp3
+Sample Data/sampletracklist.txt
